@@ -3,5 +3,6 @@
 // in a human-friendly output like zap library, the flexibility to customize the time
 // formatter and other features, almost fully compatible with slog.Handler rules and
 // maintaining high performance.
+//
 // zlog also provides a Logger for better use of formatted logging methods (xxxxf).
 package zlog

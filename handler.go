@@ -17,7 +17,7 @@ import (
 // JSONHandler implements the slog.Handler interface, transforming r.Record
 // into the JSON format, and follows therules set by slog.Handler.
 //
-// Additionally, tt provides support for the development mode, akin to zap,
+// Additionally, it provides support for the development mode, akin to zap,
 // which allows built-in attributes to be output in a human-friendly format.
 type JSONHandler struct {
 	// use mu to make sure that only one goroutine is writing to the writer at a time.
@@ -31,10 +31,10 @@ type JSONHandler struct {
 	preformattedGroupAttrs []byte
 }
 
-// ContextExtractor get attributes from context, that can be used in slog.Handler
+// ContextExtractor get attributes from context, that can be used in slog.Handler.
 type ContextExtractor func(context.Context) []slog.Attr
 
-// Config the configuration for the JSONHandler
+// Config the configuration for the JSONHandler.
 type Config struct {
 	// If nil, a default handler is used.
 	slog.HandlerOptions
@@ -87,7 +87,7 @@ var defaultConfig = Config{
 	StacktraceKey:     "stacktrace",
 }
 
-// NewJSONHandler returns a slog handler that writes log messages as JSON.
+// NewJSONHandler creates a slog handler that writes log messages as JSON.
 // If config is nil, a default configuration is used.
 func NewJSONHandler(config *Config) *JSONHandler {
 	var c Config
@@ -117,6 +117,7 @@ func NewJSONHandler(config *Config) *JSONHandler {
 }
 
 // Enabled reports whether the handler handles records at the given level. The handler ignores records whose level is lower.
+// https://pkg.go.dev/golang.org/x/exp/slog#Handler
 func (h *JSONHandler) Enabled(_ context.Context, level slog.Level) bool {
 	if h.c.Level == nil {
 		return level >= defaultConfig.Level.Level()
@@ -147,6 +148,7 @@ func (h *JSONHandler) stacktraceEnabled(level slog.Level) bool {
 }
 
 // Handle formats its argument Record as a JSON object on a single line.
+// https://pkg.go.dev/golang.org/x/exp/slog#Handler
 func (h *JSONHandler) Handle(ctx context.Context, r slog.Record) error {
 	buf := buffer.New()
 	defer buf.Free()
@@ -275,6 +277,8 @@ func (h *JSONHandler) encode(ctx context.Context, r slog.Record, buf *buffer.Buf
 	buf.WriteByte(lineEnding)
 }
 
+// WithAttrs implements the slog.Handler WithAttrs method.
+// https://pkg.go.dev/golang.org/x/exp/slog#Handler
 func (h *JSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
@@ -291,6 +295,8 @@ func (h *JSONHandler) addAttrs(attrs []slog.Attr) {
 	}
 }
 
+// WithGroup implements the slog.Handler WithGroup method.
+// https://pkg.go.dev/golang.org/x/exp/slog#Handler
 func (h *JSONHandler) WithGroup(name string) slog.Handler {
 	newHandler := h.clone()
 	if name == "" {
