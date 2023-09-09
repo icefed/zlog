@@ -62,9 +62,9 @@ The Context may contain some values that you want to print in each log. You need
 to implement the [ContextExtractor] function, which extracts the value you want
 and returns []slog.Attr.
 
-The traceContextExtractor function extracts trace span information from the Context.
+The TraceContextExtractor function extracts trace span information from the Context.
 
-	func traceContextExtractor(ctx context.Context) []slog.Attr {
+	func TraceContextExtractor(ctx context.Context) []slog.Attr {
 		spanContext := trace.SpanContextFromContext(ctx)
 		if spanContext.IsValid() {
 			return []slog.Attr{
