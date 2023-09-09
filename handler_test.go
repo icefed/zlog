@@ -168,7 +168,7 @@ type user struct {
 	Id   string
 }
 
-var userContextExtractor = func(ctx context.Context) []slog.Attr {
+func userContextExtractor(ctx context.Context) []slog.Attr {
 	user, ok := ctx.Value(userKey{}).(user)
 	if ok {
 		return []slog.Attr{

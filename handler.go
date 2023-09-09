@@ -23,7 +23,8 @@ type JSONHandler struct {
 	// use mu to make sure that only one goroutine is writing to the writer at a time.
 	mu sync.Mutex
 
-	c *Config
+	c      *Config
+	writer io.Writer
 	// the writer is a terminal file descriptor.
 	isTerm bool
 
@@ -111,6 +112,7 @@ func NewJSONHandler(config *Config) *JSONHandler {
 
 	handler := &JSONHandler{
 		c:      &c,
+		writer: newSafeWriter(c.Writer),
 		isTerm: isTerminal(c.Writer),
 	}
 	return handler
@@ -159,10 +161,7 @@ func (h *JSONHandler) Handle(ctx context.Context, r slog.Record) error {
 		h.encode(ctx, r, buf)
 	}
 
-	h.mu.Lock()
-	defer h.mu.Unlock()
-
-	_, err := h.c.Writer.Write(buf.Bytes())
+	_, err := h.writer.Write(buf.Bytes())
 	return err
 }
 
@@ -314,15 +313,30 @@ func (h *JSONHandler) addGroup(name string) {
 
 func (h *JSONHandler) clone() *JSONHandler {
 	newHandler := &JSONHandler{
-		// mutex shared among all clones of this handler, like slog.commonHandler does.
-		mu:                     h.mu,
 		c:                      h.c.copy(),
+		writer:                 h.writer,
 		isTerm:                 h.isTerm,
 		groups:                 slices.Clip(h.groups),
 		preformattedGroupAttrs: slices.Clip(h.preformattedGroupAttrs),
 	}
 
 	return newHandler
+}
+
+func newSafeWriter(w io.Writer) io.Writer {
+	return &safeWriter{Writer: w}
+}
+
+// safeWriter supports concurrency safe writing.
+type safeWriter struct {
+	mu sync.Mutex
+	io.Writer
+}
+
+func (w *safeWriter) Write(p []byte) (int, error) {
+	w.mu.Lock()
+	defer w.mu.Unlock()
+	return w.Writer.Write(p)
 }
 
 // needColoredLevel returns true if in development mode and output writer is a terminal.
