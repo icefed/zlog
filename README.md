@@ -176,7 +176,7 @@ func LogMiddleware(log *zlog.Logger, next http.Handler) http.Handler {
 	})
 }
 
-func helloHandlerFunc(w http.ResponseWriter, r *http.Request) {
+func hello(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Hello, World!"))
 }
@@ -190,7 +190,7 @@ func main() {
 	h = h.WithOptions(zlog.WithContextExtractor(userContextExtractor))
 	log := zlog.New(h)
 
-	httpHandler := http.HandlerFunc(helloHandlerFunc)
+	httpHandler := http.HandlerFunc(hello)
 	// set auth middleware
 	handler := AuthMiddleware(httpHandler)
 	// set log middleware
