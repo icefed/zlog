@@ -28,7 +28,7 @@ Use zlog.Logger with zlog.JSONHandler.
 	// ...
 	log.Errorf("Read file %s failed: %s", filePath, err)
 
-# Use default zlog.Logger
+Use default zlog.Logger
 
 	zlog.Warn("hello world", slog.String("foo", "bar"))
 
