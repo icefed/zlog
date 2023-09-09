@@ -208,7 +208,7 @@ type user struct {
 ```
 
 Send a request using curl.
-```shell
+```bash
 curl http://localhost:8080/api/v1/products
 Hello, World!
 ```
