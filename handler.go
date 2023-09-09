@@ -133,6 +133,7 @@ func (h *JSONHandler) GetAddSource() bool {
 }
 
 // WithOptions return a new handler with the given options.
+// Options will override the hander's config.
 func (h *JSONHandler) WithOptions(opts ...Option) *JSONHandler {
 	newHandler := h.clone()
 	for i := range opts {
