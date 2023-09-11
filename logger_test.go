@@ -36,12 +36,15 @@ func TestLogger(t *testing.T) {
 		buf.Reset()
 	}
 
+	// WithCallerSkip
+	testWithCallerSkip(l, check, 1, "zlog/logger_test.go:40")
+
 	SetDefault(l)
 
 	l.WithOptions(WithAddSource(true)).Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
-	check(`{"level":"DEBUG","source":"zlog/logger_test.go:41","msg":"debug","key":"value"}`)
+	check(`{"level":"DEBUG","source":"zlog/logger_test.go:44","msg":"debug","key":"value"}`)
 	l.WithOptions(WithAddSource(true)).LogAttrs(context.Background(), slog.LevelDebug, "debug", slog.String("key", "value"))
-	check(`{"level":"DEBUG","source":"zlog/logger_test.go:43","msg":"debug","key":"value"}`)
+	check(`{"level":"DEBUG","source":"zlog/logger_test.go:46","msg":"debug","key":"value"}`)
 
 	WithGroup("g").With("app", "test").Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	check(`{"level":"DEBUG","msg":"debug","g":{"app":"test","key":"value"}}`)
@@ -89,4 +92,10 @@ func TestLogger(t *testing.T) {
 	check(`{"level":"WARN","msg":"request limit exceeded","duration":500000000}`)
 	WarnContextf(context.Background(), "request limit exceeded: %s: %d", "duration", 500*time.Millisecond)
 	check(`{"level":"WARN","msg":"request limit exceeded: duration: 500000000"}`)
+}
+
+func testWithCallerSkip(log *Logger, check func(expected string), skip int, expectedSource string) {
+	log.WithOptions(WithAddSource(true)).WithCallerSkip(1).
+		Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
+	check(`{"level":"DEBUG","source":"` + expectedSource + `","msg":"debug","key":"value"}`)
 }

@@ -12,7 +12,8 @@ import (
 type Logger struct {
 	h *JSONHandler
 
-	capturePC bool
+	callerSkip int
+	capturePC  bool
 }
 
 // New creates a new Logger. NewJSONHandler(nil) will be used if h is nil.
@@ -61,6 +62,20 @@ func (l *Logger) WithOptions(opts ...Option) *Logger {
 	newLogger := l.clone()
 	newLogger.h = l.h.WithOptions(opts...)
 	newLogger.capturePC = newLogger.h.GetAddSource()
+	return newLogger
+}
+
+// WithCallerSkip returns a new logger with the given caller skip.
+// argument 'skip' will be added to the caller skip in the logger, which is passed
+// as the first parameter 'skip' when calling runtime.Callers to get the source's pc.
+// If 'skip' is 1, then skip a caller frame, if you have set callerskip, 'skip' can
+// also be negative to subtract callerskip.
+func (l *Logger) WithCallerSkip(skip int) *Logger {
+	if l == nil {
+		return l
+	}
+	newLogger := l.clone()
+	newLogger.callerSkip += skip
 	return newLogger
 }
 
@@ -114,7 +129,8 @@ func (l *Logger) log(ctx context.Context, level slog.Level, msg string, args ...
 	var pc uintptr
 	if l.capturePC {
 		var pcs [1]uintptr
-		runtime.Callers(3, pcs[:])
+		// skip runtime.Callers, log, log's caller, and l.callerSkip
+		runtime.Callers(3+l.callerSkip, pcs[:])
 		pc = pcs[0]
 	}
 
@@ -135,7 +151,8 @@ func (l *Logger) logAttrs(ctx context.Context, level slog.Level, msg string, att
 	var pc uintptr
 	if l.capturePC {
 		var pcs [1]uintptr
-		runtime.Callers(3, pcs[:])
+		// skip runtime.Callers, logAttrs, logAttrs's caller, and l.callerSkip
+		runtime.Callers(3+l.callerSkip, pcs[:])
 		pc = pcs[0]
 	}
 	r := slog.NewRecord(time.Now(), level, msg, pc)
