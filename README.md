@@ -8,7 +8,9 @@
 
 ## Features
 - JSON Structured logging
+- Logger with format method(xxxxf)
 - Development mode with human-friendly output
+- WithCallerSkip to skip caller
 - Context extractor for Record context
 - Custom time formatter for buildin attribute time value
 
