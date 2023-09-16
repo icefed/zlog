@@ -23,19 +23,50 @@ func Test(t *testing.T) {
 	if *b.LastByte() != wantLastByte {
 		t.Errorf("got %q, want %q", *b.LastByte(), len(wantBytes))
 	}
-	// truncate
-	b.Truncate(100)
-	if string(b.Bytes()) != wantBytes {
-		t.Errorf("got %q, want %q", b.Bytes(), wantBytes)
+	// truncate nagative
+	l := b.Len()
+	b.Truncate(-1)
+	if b.Len() != l {
+		t.Errorf("got %q, want %q", b.Len(), l)
 	}
+	// truncate grow
+	b.Truncate(100)
+	if b.Len() != 100 {
+		t.Errorf("got %q, want %q", b.Len(), 100)
+	}
+	// truncate shrink
 	truncatedSize := 9
 	truncatedBytes := "string by"
 	b.Truncate(truncatedSize)
-	if string(b.Bytes()) != truncatedBytes {
-		t.Errorf("got %q, want %q", b.Bytes(), truncatedBytes)
+	if b.String() != truncatedBytes {
+		t.Errorf("got %q, want %q", b.String(), truncatedBytes)
 	}
 	if b.Len() != truncatedSize {
 		t.Errorf("got %q, want %q", b.Len(), truncatedSize)
+	}
+	// grow negative
+	l = b.Len()
+	b.Grow(-1)
+	if b.Len() != l {
+		t.Errorf("got %q, want %q", b.Len(), l)
+	}
+	// grow
+	growSize := 10
+	b.Grow(growSize)
+	if b.Len() != l+growSize {
+		t.Errorf("got %q, want %q", b.Len(), l+growSize)
+	}
+	l = b.Len()
+	growSize = 500
+	b.Grow(growSize)
+	if b.Len() != l+growSize {
+		t.Errorf("got %q, want %q", b.Len(), l+growSize)
+	}
+	l = b.Len()
+	growSize = 1000
+	b.Grow(growSize)
+	if b.Len() != l+growSize {
+		t.Errorf("got %q, want %q", b.Len(), l+growSize)
 	}
 
 	// reset

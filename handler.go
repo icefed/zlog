@@ -20,9 +20,6 @@ import (
 // Additionally, it provides support for the development mode, akin to zap,
 // which allows built-in attributes to be output in a human-friendly format.
 type JSONHandler struct {
-	// use mu to make sure that only one goroutine is writing to the writer at a time.
-	mu sync.Mutex
-
 	c      *Config
 	writer io.Writer
 	// the writer is a terminal file descriptor.
@@ -111,7 +108,8 @@ func NewJSONHandler(config *Config) *JSONHandler {
 	}
 
 	handler := &JSONHandler{
-		c:      &c,
+		c: &c,
+		// use newSafeWriter to make sure that only one goroutine is writing to the writer at a time.
 		writer: newSafeWriter(c.Writer),
 		isTerm: isTerminal(c.Writer),
 	}

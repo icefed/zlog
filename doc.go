@@ -5,7 +5,7 @@ in a user-friendly output like a zap library, flexible custom time formatters an
 other features, and almost fully compatible with slog.Handler rules, while
 maintaining high performance.
 
-zlog also provides a Logger for better use the formatted logging methods (xxxxf).
+zlog also provides a Logger for better use the formatted logging methods (printf-style).
 
 # Getting Started
 

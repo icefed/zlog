@@ -8,7 +8,7 @@
 
 ## Features
 - JSON Structured logging
-- Logger with format method(xxxxf)
+- Logger with format method(printf-style)
 - Development mode with human-friendly output
 - WithCallerSkip to skip caller
 - Context extractor for Record context
