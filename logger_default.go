@@ -8,11 +8,8 @@ import (
 
 var defaultLogger = New(NewJSONHandler(nil))
 
-// SetDefault sets the default logger. If l is nil, the default logger is not changed.
+// SetDefault sets the default logger.
 func SetDefault(l *Logger) {
-	if l == nil {
-		return
-	}
 	defaultLogger = l
 }
 
