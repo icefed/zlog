@@ -52,7 +52,6 @@ func WithDevelopment(development bool) Option {
 func WithWriter(w io.Writer) Option {
 	return optionFunc{func(h *JSONHandler) {
 		h.c.Writer = w
-		h.writer = newSafeWriter(w)
 		h.isTerm = isTerminal(w)
 	}}
 }

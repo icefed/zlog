@@ -4,7 +4,6 @@ import (
 	"context"
 	"io"
 	"os"
-	"sync"
 	"time"
 
 	"golang.org/x/exp/slices"
@@ -20,8 +19,7 @@ import (
 // Additionally, it provides support for the development mode, akin to zap,
 // which allows built-in attributes to be output in a human-friendly format.
 type JSONHandler struct {
-	c      *Config
-	writer io.Writer
+	c *Config
 	// the writer is a terminal file descriptor.
 	isTerm bool
 
@@ -108,9 +106,7 @@ func NewJSONHandler(config *Config) *JSONHandler {
 	}
 
 	handler := &JSONHandler{
-		c: &c,
-		// use newSafeWriter to make sure that only one goroutine is writing to the writer at a time.
-		writer: newSafeWriter(c.Writer),
+		c:      &c,
 		isTerm: isTerminal(c.Writer),
 	}
 	return handler
@@ -160,7 +156,7 @@ func (h *JSONHandler) Handle(ctx context.Context, r slog.Record) error {
 		h.encode(ctx, r, buf)
 	}
 
-	_, err := h.writer.Write(buf.Bytes())
+	_, err := h.c.Writer.Write(buf.Bytes())
 	return err
 }
 
@@ -313,29 +309,12 @@ func (h *JSONHandler) addGroup(name string) {
 func (h *JSONHandler) clone() *JSONHandler {
 	newHandler := &JSONHandler{
 		c:                      h.c.copy(),
-		writer:                 h.writer,
 		isTerm:                 h.isTerm,
 		groups:                 slices.Clip(h.groups),
 		preformattedGroupAttrs: slices.Clip(h.preformattedGroupAttrs),
 	}
 
 	return newHandler
-}
-
-func newSafeWriter(w io.Writer) io.Writer {
-	return &safeWriter{Writer: w}
-}
-
-// safeWriter supports concurrency safe writing.
-type safeWriter struct {
-	mu sync.Mutex
-	io.Writer
-}
-
-func (w *safeWriter) Write(p []byte) (int, error) {
-	w.mu.Lock()
-	defer w.mu.Unlock()
-	return w.Writer.Write(p)
 }
 
 // needColoredLevel returns true if in development mode and output writer is a terminal.
