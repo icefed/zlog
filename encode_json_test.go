@@ -161,14 +161,29 @@ func TestJSONEncoderReplace(t *testing.T) {
 				return a
 			},
 		}, {
-			key:   "time",
+			key:   "timestring2",
 			value: testTime,
-			want:  `"time":"2023-08-16T01:02:03.666Z"`,
+			want:  `"timestring2":"2023-08-16T01:02:03.666666666Z"`,
+			replaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+				if a.Key == "timestring2" {
+					a.Value = slog.StringValue("2023-08-16T01:02:03.666666666Z")
+				}
+				return a
+			},
 		}, {
-			groups: []string{"g"},
-			key:    "time",
-			value:  testTime,
-			want:   `"g":{"time":"2023-08-16T01:02:03.666666666Z"`,
+			key:   "testtime",
+			value: testTime,
+			want:  `"testtime":"2023-08-16T01:02:03.666Z"`,
+		}, {
+			key:   "deletetime",
+			value: testTime,
+			want:  ``,
+			replaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+				if a.Key == "deletetime" {
+					a.Key = ""
+				}
+				return a
+			},
 		}, {
 			key: slog.SourceKey,
 			value: &slog.Source{

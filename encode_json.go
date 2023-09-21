@@ -33,6 +33,15 @@ func newJSONEncoder(h *JSONHandler, buf *buffer.Buffer) *jsonEncoder {
 }
 
 func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
+	if enc.replaceAttr != nil && a.Value.Kind() != slog.KindGroup {
+		a.Value = a.Value.Resolve()
+		a = enc.replaceAttr(enc.openGroups, a)
+		// If ReplaceAttr returns an Attr with Key == "", the attribute is discarded.
+		if a.Key == "" {
+			return
+		}
+	}
+	a.Value = a.Value.Resolve()
 	// If an Attr's key and value are both the zero value, ignore the Attr.
 	if a.Equal(slog.Attr{}) {
 		return
@@ -41,66 +50,41 @@ func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
 		groupAttrs := a.Value.Group()
 		// If a group's key is empty, inline the group's Attrs.
 		// If a group has no Attrs (even if it has a non-empty key), ignore it.
-		emptyGroupOrKey := len(groupAttrs) != 0 && a.Key != ""
-		if emptyGroupOrKey {
+		notEmptyGroupOrKey := len(groupAttrs) != 0 && a.Key != ""
+		if notEmptyGroupOrKey {
 			enc.OpenGroup(a.Key)
 		}
 		for i := range groupAttrs {
 			enc.AppendAttr(groupAttrs[i])
 		}
-		if emptyGroupOrKey {
+		if notEmptyGroupOrKey {
 			enc.CloseGroup()
 		}
 		return
 	}
 
-	if enc.replaceAttr != nil {
-		a.Value = a.Value.Resolve()
-		a = enc.replaceAttr(enc.openGroups, a)
-		// If ReplaceAttr returns an Attr with Key == "", the attribute is discarded.
-		if a.Key == "" {
-			return
-		}
-	}
 	enc.addKey(a.Key)
-	a.Value = a.Value.Resolve()
-	switch a.Value.Kind() {
-	case slog.KindAny:
-		enc.addAny(a.Value.Any())
-	case slog.KindBool:
-		enc.addBool(a.Value.Bool())
-	case slog.KindDuration:
-		enc.addDuration(a.Value.Duration())
-	case slog.KindFloat64:
-		enc.addFloat64(a.Value.Float64())
-	case slog.KindInt64:
-		enc.addInt64(a.Value.Int64())
-	case slog.KindString:
-		enc.safeAddString(a.Value.String())
-	case slog.KindTime:
-		if a.Key == slog.TimeKey && len(enc.openGroups) == 0 {
-			enc.addTime2Formatter(a.Value.Time())
-		} else {
-			enc.addTime(a.Value.Time())
-		}
-	case slog.KindUint64:
-		enc.addUint64(a.Value.Uint64())
-	default:
-		panic(fmt.Sprintf("bad kind: %s", a.Value.Kind()))
-	}
+	enc.addValue(a.Value)
 }
 
 func (enc *jsonEncoder) AppendTime(key string, t time.Time) {
 	if enc.replaceAttr != nil {
-		enc.AppendAttr(slog.Time(key, t))
+		attr := enc.replaceAttr(enc.openGroups, slog.Time(key, t))
+		// If ReplaceAttr returns an Attr with Key == "", the attribute is discarded.
+		if attr.Key == "" {
+			return
+		}
+		enc.addKey(key)
+		attr.Value = attr.Value.Resolve()
+		if attr.Value.Kind() == slog.KindTime {
+			enc.addTime2Formatter(t)
+		} else {
+			enc.addValue(attr.Value)
+		}
 		return
 	}
 	enc.addKey(key)
-	if key == slog.TimeKey && len(enc.openGroups) == 0 {
-		enc.addTime2Formatter(t)
-	} else {
-		enc.addTime(t)
-	}
+	enc.addTime2Formatter(t)
 }
 
 func (enc *jsonEncoder) AppendLevel(key string, l slog.Level) {
@@ -164,6 +148,30 @@ func (enc *jsonEncoder) CloseGroup() {
 func (enc *jsonEncoder) CloseGroups() {
 	for i := len(enc.openGroups); i >= 0; i-- {
 		enc.CloseGroup()
+	}
+}
+
+// addValue handle slog.Value except slog.KindLogValuer and slog.KindGroup
+func (enc *jsonEncoder) addValue(v slog.Value) {
+	switch v.Kind() {
+	case slog.KindAny:
+		enc.addAny(v.Any())
+	case slog.KindBool:
+		enc.addBool(v.Bool())
+	case slog.KindDuration:
+		enc.addDuration(v.Duration())
+	case slog.KindFloat64:
+		enc.addFloat64(v.Float64())
+	case slog.KindInt64:
+		enc.addInt64(v.Int64())
+	case slog.KindString:
+		enc.safeAddString(v.String())
+	case slog.KindTime:
+		enc.addTime(v.Time())
+	case slog.KindUint64:
+		enc.addUint64(v.Uint64())
+	default:
+		panic(fmt.Sprintf("bad kind: %s", v.Kind()))
 	}
 }
 
@@ -593,21 +601,6 @@ func (enc *jsonEncoder) addFloat64Array(arr []float64) {
 	enc.buf.WriteByte(']')
 }
 
-func (enc *jsonEncoder) addTimeArray(arr []time.Time) {
-	if arr == nil {
-		enc.addNil()
-		return
-	}
-	enc.buf.WriteByte('[')
-	for i, t := range arr {
-		if i > 0 {
-			enc.buf.WriteByte(',')
-		}
-		enc.addTime(t)
-	}
-	enc.buf.WriteByte(']')
-}
-
 func (enc *jsonEncoder) addDurationArray(arr []time.Duration) {
 	if arr == nil {
 		enc.addNil()
@@ -619,6 +612,21 @@ func (enc *jsonEncoder) addDurationArray(arr []time.Duration) {
 			enc.buf.WriteByte(',')
 		}
 		enc.addDuration(d)
+	}
+	enc.buf.WriteByte(']')
+}
+
+func (enc *jsonEncoder) addTimeArray(arr []time.Time) {
+	if arr == nil {
+		enc.addNil()
+		return
+	}
+	enc.buf.WriteByte('[')
+	for i, t := range arr {
+		if i > 0 {
+			enc.buf.WriteByte(',')
+		}
+		enc.addTime(t)
 	}
 	enc.buf.WriteByte(']')
 }
