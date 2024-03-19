@@ -183,6 +183,16 @@ func hello(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("Hello, World!"))
 }
 
+func userContextExtractor(ctx context.Context) []slog.Attr {
+	user, ok := ctx.Value(userKey{}).(user)
+	if ok {
+		return []slog.Attr{
+			slog.Group("user", slog.String("name", user.Name), slog.String("id", user.Id)),
+		}
+	}
+	return nil
+}
+
 func main() {
 	h := zlog.NewJSONHandler(&zlog.Config{
 		HandlerOptions: slog.HandlerOptions{
