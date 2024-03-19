@@ -206,7 +206,7 @@ func (enc *jsonEncoder) addAny(v any) {
 			enc.addNil()
 			return
 		}
-		enc.addString(*v)
+		enc.safeAddString(*v)
 	case *bool:
 		if v == nil {
 			enc.addNil()
@@ -327,7 +327,11 @@ func (enc *jsonEncoder) addAny(v any) {
 		}
 		data, err := v.MarshalJSON()
 		if err != nil {
-			enc.addString(fmt.Sprintf("!ERROR:%v", err))
+			enc.safeAddString(fmt.Sprintf("!ERROR:%v", err))
+			return
+		}
+		if !json.Valid(data) {
+			enc.safeAddString(fmt.Sprintf("!ERROR: invalid MarshalJSON output:%v", v))
 			return
 		}
 		enc.addRawMessage(data)
@@ -338,7 +342,7 @@ func (enc *jsonEncoder) addAny(v any) {
 		}
 		data, err := v.MarshalText()
 		if err != nil {
-			enc.addString(fmt.Sprintf("!ERROR:%v", err))
+			enc.safeAddString(fmt.Sprintf("!ERROR:%v", err))
 			return
 		}
 		enc.safeAddString((*buffer.Buffer)(&data).String())
@@ -347,12 +351,12 @@ func (enc *jsonEncoder) addAny(v any) {
 			enc.addNil()
 			return
 		}
-		enc.addString(v.Error())
+		enc.safeAddString(v.Error())
 	default:
 		je := json.NewEncoder(&ioWriter{enc.buf})
 		je.SetEscapeHTML(false)
 		if err := je.Encode(v); err != nil {
-			enc.addString(fmt.Sprintf("!ERROR:%v", err))
+			enc.safeAddString(fmt.Sprintf("!ERROR:%v", err))
 		}
 	}
 }
