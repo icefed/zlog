@@ -98,7 +98,7 @@ func main() {
 ```
 
 Outputs:
-![](examples/development.png)
+![](images/development.png)
 
 ### Enable stack trace
 
