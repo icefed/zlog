@@ -46,6 +46,13 @@ type Config struct {
 	// TimeFormatter is the time formatter to use for buildin attribute time value. If nil, use format RFC3339Milli as default.
 	TimeFormatter func([]byte, time.Time) []byte
 
+	// built-in attribute keys, use slog's default if not set.
+	// https://pkg.go.dev/golang.org/x/exp/slog#pkg-constants
+	TimeKey    string
+	LevelKey   string
+	MessageKey string
+	SourceKey  string
+
 	// StacktraceEnabled enables stack trace for slog.Record.
 	StacktraceEnabled bool
 	// StacktraceLevel means which slog.Level from we should enable stack trace.
@@ -78,6 +85,10 @@ var defaultConfig = Config{
 	TimeFormatter: func(buf []byte, t time.Time) []byte {
 		return t.AppendFormat(buf, RFC3339Milli)
 	},
+	TimeKey:           slog.TimeKey,
+	LevelKey:          slog.LevelKey,
+	MessageKey:        slog.MessageKey,
+	SourceKey:         slog.SourceKey,
 	StacktraceEnabled: false,
 	StacktraceLevel:   slog.LevelError,
 	StacktraceKey:     "stacktrace",
@@ -102,6 +113,18 @@ func NewJSONHandler(config *Config) *JSONHandler {
 		}
 		if c.StacktraceKey == "" {
 			c.StacktraceKey = defaultConfig.StacktraceKey
+		}
+		if c.TimeKey == "" {
+			c.TimeKey = defaultConfig.TimeKey
+		}
+		if c.LevelKey == "" {
+			c.LevelKey = defaultConfig.LevelKey
+		}
+		if c.MessageKey == "" {
+			c.MessageKey = defaultConfig.MessageKey
+		}
+		if c.SourceKey == "" {
+			c.SourceKey = defaultConfig.SourceKey
 		}
 	}
 
@@ -181,21 +204,21 @@ func (h *JSONHandler) encodeDevelopment(ctx context.Context, r slog.Record, buf 
 	// time
 	// If r.Time is the zero time, ignore the time.
 	if !r.Time.IsZero() {
-		tenc.Append(slog.TimeKey, r.Time)
+		tenc.Append(h.c.TimeKey, r.Time)
 		buf.WriteString("  ")
 	}
 	// level
-	tenc.Append(slog.LevelKey, r.Level)
+	tenc.Append(h.c.LevelKey, r.Level)
 	// source
 	// If r.PC is zero, ignore it.
 	if h.c.AddSource && r.PC != 0 {
 		buf.WriteByte('\t')
-		tenc.Append(slog.SourceKey, r.PC)
+		tenc.Append(h.c.SourceKey, r.PC)
 	}
 	// message
 	if r.Message != "" {
 		buf.WriteByte('\t')
-		tenc.Append(slog.MessageKey, r.Message)
+		tenc.Append(h.c.MessageKey, r.Message)
 	}
 
 	size := len(buf.Bytes())
@@ -239,17 +262,17 @@ func (h *JSONHandler) encode(ctx context.Context, r slog.Record, buf *buffer.Buf
 	// time
 	// If r.Time is the zero time, ignore the time.
 	if !r.Time.IsZero() {
-		enc.AppendTime(slog.TimeKey, r.Time)
+		enc.AppendTime(h.c.TimeKey, r.Time)
 	}
 	// level
-	enc.AppendLevel(slog.LevelKey, r.Level)
+	enc.AppendLevel(h.c.LevelKey, r.Level)
 	// source
 	// If r.PC is zero, ignore it.
 	if h.c.AddSource && r.PC != 0 {
-		enc.AppendSourceFromPC(slog.SourceKey, r.PC)
+		enc.AppendSourceFromPC(h.c.SourceKey, r.PC)
 	}
 	// message
-	enc.AppendString(slog.MessageKey, r.Message)
+	enc.AppendString(h.c.MessageKey, r.Message)
 
 	// preformatted attrs
 	enc.AppendFormatted(h.preformattedGroupAttrs)
