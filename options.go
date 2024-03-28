@@ -2,9 +2,8 @@ package zlog
 
 import (
 	"io"
+	"log/slog"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 // Option is the option for JSONHandler.

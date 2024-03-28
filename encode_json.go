@@ -5,12 +5,11 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"reflect"
 	"strconv"
 	"time"
 	"unicode"
-
-	"golang.org/x/exp/slog"
 
 	"github.com/icefed/zlog/buffer"
 )

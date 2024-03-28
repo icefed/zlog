@@ -3,9 +3,8 @@ package zlog
 import (
 	"encoding"
 	"fmt"
+	"log/slog"
 	"time"
-
-	"golang.org/x/exp/slog"
 
 	"github.com/icefed/zlog/buffer"
 )

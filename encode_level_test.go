@@ -2,10 +2,10 @@ package zlog
 
 import (
 	"bytes"
+	"log/slog"
 	"testing"
 
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 func TestFormatColorLevelValue(t *testing.T) {

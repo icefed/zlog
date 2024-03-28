@@ -2,8 +2,7 @@ package zlog
 
 import (
 	"context"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 // NewNopHandler creates a slog handler that discards all log messages.

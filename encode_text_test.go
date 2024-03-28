@@ -2,13 +2,13 @@ package zlog
 
 import (
 	"io/fs"
+	"log/slog"
 	"net"
 	"strconv"
 	"testing"
 	"time"
 
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 var testTime = time.Date(2023, 8, 16, 1, 2, 3, 666666666, time.UTC)

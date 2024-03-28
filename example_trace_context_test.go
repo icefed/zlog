@@ -2,13 +2,14 @@ package zlog_test
 
 import (
 	"context"
+	"log/slog"
 
-	"github.com/icefed/zlog"
 	"go.opentelemetry.io/otel"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 	"go.opentelemetry.io/otel/sdk/trace/tracetest"
 	"go.opentelemetry.io/otel/trace"
-	"golang.org/x/exp/slog"
+
+	"github.com/icefed/zlog"
 )
 
 // traceContextExtractor implement the ContextExtractor, extracts trace context from context

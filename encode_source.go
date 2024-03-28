@@ -1,12 +1,12 @@
 package zlog
 
 import (
+	"log/slog"
 	"runtime"
 	"strconv"
 	"strings"
 
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 func buildSource(pc uintptr) *slog.Source {

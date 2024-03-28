@@ -3,11 +3,11 @@ package zlog
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"runtime"
 	"time"
 
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 type Logger struct {

@@ -4,10 +4,9 @@ import (
 	"bytes"
 	"context"
 	"fmt"
+	"log/slog"
 	"testing"
 	"time"
-
-	"golang.org/x/exp/slog"
 )
 
 func TestLogger(t *testing.T) {
@@ -37,14 +36,14 @@ func TestLogger(t *testing.T) {
 	}
 
 	// WithCallerSkip
-	testWithCallerSkip(l, check, 1, "zlog/logger_test.go:40")
+	testWithCallerSkip(l, check, 1, "zlog/logger_test.go:39")
 
 	SetDefault(l)
 
 	l.WithOptions(WithAddSource(true)).Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
-	check(`{"level":"DEBUG","source":"zlog/logger_test.go:44","msg":"debug","key":"value"}`)
+	check(`{"level":"DEBUG","source":"zlog/logger_test.go:43","msg":"debug","key":"value"}`)
 	l.WithOptions(WithAddSource(true)).LogAttrs(context.Background(), slog.LevelDebug, "debug", slog.String("key", "value"))
-	check(`{"level":"DEBUG","source":"zlog/logger_test.go:46","msg":"debug","key":"value"}`)
+	check(`{"level":"DEBUG","source":"zlog/logger_test.go:45","msg":"debug","key":"value"}`)
 
 	WithGroup("g").With("app", "test").Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	check(`{"level":"DEBUG","msg":"debug","g":{"app":"test","key":"value"}}`)

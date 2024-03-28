@@ -1,8 +1,9 @@
 package zlog
 
 import (
+	"log/slog"
+
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 const (

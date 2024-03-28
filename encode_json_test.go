@@ -2,6 +2,7 @@ package zlog
 
 import (
 	"io/fs"
+	"log/slog"
 	"math/big"
 	"net"
 	"strconv"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 func TestJSONEncoderNoReplace(t *testing.T) {

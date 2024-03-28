@@ -3,11 +3,11 @@ package zlog
 import (
 	"context"
 	"io"
+	"log/slog"
 	"os"
+	"slices"
 	"time"
 
-	"golang.org/x/exp/slices"
-	"golang.org/x/exp/slog"
 	"golang.org/x/term"
 
 	"github.com/icefed/zlog/buffer"
@@ -47,7 +47,7 @@ type Config struct {
 	TimeFormatter AppendTimeFunc
 
 	// built-in attribute keys, use slog's default if not set.
-	// https://pkg.go.dev/golang.org/x/exp/slog#pkg-constants
+	// https://pkg.go.dev/log/slog#pkg-constants
 	TimeKey    string
 	LevelKey   string
 	MessageKey string
@@ -139,7 +139,7 @@ func NewJSONHandler(config *Config) *JSONHandler {
 }
 
 // Enabled reports whether the handler handles records at the given level. The handler ignores records whose level is lower.
-// https://pkg.go.dev/golang.org/x/exp/slog#Handler
+// https://pkg.go.dev/log/slog#Handler
 func (h *JSONHandler) Enabled(_ context.Context, level slog.Level) bool {
 	if h.c.Level == nil {
 		return level >= defaultConfig.Level.Level()
@@ -171,7 +171,7 @@ func (h *JSONHandler) stacktraceEnabled(level slog.Level) bool {
 }
 
 // Handle formats its argument Record as a JSON object on a single line.
-// https://pkg.go.dev/golang.org/x/exp/slog#Handler
+// https://pkg.go.dev/log/slog#Handler
 func (h *JSONHandler) Handle(ctx context.Context, r slog.Record) error {
 	buf := buffer.New()
 	defer buf.Free()
@@ -298,7 +298,7 @@ func (h *JSONHandler) encode(ctx context.Context, r slog.Record, buf *buffer.Buf
 }
 
 // WithAttrs implements the slog.Handler WithAttrs method.
-// https://pkg.go.dev/golang.org/x/exp/slog#Handler
+// https://pkg.go.dev/log/slog#Handler
 func (h *JSONHandler) WithAttrs(attrs []slog.Attr) slog.Handler {
 	if len(attrs) == 0 {
 		return h
@@ -316,7 +316,7 @@ func (h *JSONHandler) addAttrs(attrs []slog.Attr) {
 }
 
 // WithGroup implements the slog.Handler WithGroup method.
-// https://pkg.go.dev/golang.org/x/exp/slog#Handler
+// https://pkg.go.dev/log/slog#Handler
 func (h *JSONHandler) WithGroup(name string) slog.Handler {
 	newHandler := h.clone()
 	if name == "" {

@@ -2,9 +2,8 @@ package zlog
 
 import (
 	"context"
+	"log/slog"
 	"testing"
-
-	"golang.org/x/exp/slog"
 )
 
 func TestNopHandler(t *testing.T) {

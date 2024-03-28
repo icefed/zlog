@@ -1,10 +1,10 @@
 package zlog
 
 import (
+	"log/slog"
 	"testing"
 
 	"github.com/icefed/zlog/buffer"
-	"golang.org/x/exp/slog"
 )
 
 func TestFormatSourceValue(t *testing.T) {

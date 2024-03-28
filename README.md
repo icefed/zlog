@@ -19,7 +19,8 @@
 Because zlog implements the slog.Handler interface, you can create a zlog.JSONHander and use slog.Logger.
 ```go
 import (
-    "golang.org/x/exp/slog"
+    "log/slog"
+
     "github.com/icefed/zlog"
 )
 
@@ -44,9 +45,9 @@ Then you can use Infof and other methods that support format format.
 ```go
 import (
 	"context"
+	"log/slog"
 
 	"github.com/icefed/zlog"
-	"golang.org/x/exp/slog"
 )
 
 func main() {
@@ -71,8 +72,9 @@ Development mode, like zap development, outputs buildin attributes in Text forma
 package main
 
 import (
+	"log/slog"
+
 	"github.com/icefed/zlog"
-	"golang.org/x/exp/slog"
 )
 
 func main() {

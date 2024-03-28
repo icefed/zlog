@@ -2,8 +2,7 @@ package zlog
 
 import (
 	"context"
-
-	"golang.org/x/exp/slog"
+	"log/slog"
 )
 
 var defaultLogger = New(NewJSONHandler(nil))
