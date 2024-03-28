@@ -44,7 +44,7 @@ type Config struct {
 	Writer io.Writer
 
 	// TimeFormatter is the time formatter to use for buildin attribute time value. If nil, use format RFC3339Milli as default.
-	TimeFormatter func([]byte, time.Time) []byte
+	TimeFormatter AppendTimeFunc
 
 	// built-in attribute keys, use slog's default if not set.
 	// https://pkg.go.dev/golang.org/x/exp/slog#pkg-constants
@@ -70,6 +70,9 @@ func (c *Config) copy() *Config {
 	newConfig.ContextExtractors = slices.Clip(c.ContextExtractors)
 	return &newConfig
 }
+
+// AppendTimeFunc append the formatted value to buf and returns the extended buffer.
+type AppendTimeFunc func(buf []byte, t time.Time) []byte
 
 // RFC3339Milli define the time format as RFC3339 with millisecond precision.
 const RFC3339Milli = "2006-01-02T15:04:05.999Z07:00"
