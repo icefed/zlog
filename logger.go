@@ -209,26 +209,6 @@ func (l *Logger) DebugContextf(ctx context.Context, format string, args ...any) 
 	l.logf(ctx, slog.LevelDebug, format, args...)
 }
 
-// Error prints log message at the error level.
-func (l *Logger) Error(msg string, args ...any) {
-	l.log(context.Background(), slog.LevelError, msg, args...)
-}
-
-// Errorf prints log message at the error level, fmt.Sprintf is used to format.
-func (l *Logger) Errorf(format string, args ...any) {
-	l.logf(nil, slog.LevelError, format, args...)
-}
-
-// ErrorContext prints log message at the error level with context.
-func (l *Logger) ErrorContext(ctx context.Context, msg string, args ...any) {
-	l.log(ctx, slog.LevelError, msg, args...)
-}
-
-// ErrorContextf prints log message at the error level with context, fmt.Sprintf is used to format.
-func (l *Logger) ErrorContextf(ctx context.Context, format string, args ...any) {
-	l.logf(ctx, slog.LevelError, format, args...)
-}
-
 // Info prints log message at the info level.
 func (l *Logger) Info(msg string, args ...any) {
 	l.log(context.Background(), slog.LevelInfo, msg, args...)
@@ -267,4 +247,24 @@ func (l *Logger) WarnContext(ctx context.Context, msg string, args ...any) {
 // WarnContextf prints log message at the warn level with context, fmt.Sprintf is used to format.
 func (l *Logger) WarnContextf(ctx context.Context, format string, args ...any) {
 	l.logf(ctx, slog.LevelWarn, format, args...)
+}
+
+// Error prints log message at the error level.
+func (l *Logger) Error(msg string, args ...any) {
+	l.log(context.Background(), slog.LevelError, msg, args...)
+}
+
+// Errorf prints log message at the error level, fmt.Sprintf is used to format.
+func (l *Logger) Errorf(format string, args ...any) {
+	l.logf(nil, slog.LevelError, format, args...)
+}
+
+// ErrorContext prints log message at the error level with context.
+func (l *Logger) ErrorContext(ctx context.Context, msg string, args ...any) {
+	l.log(ctx, slog.LevelError, msg, args...)
+}
+
+// ErrorContextf prints log message at the error level with context, fmt.Sprintf is used to format.
+func (l *Logger) ErrorContextf(ctx context.Context, format string, args ...any) {
+	l.logf(ctx, slog.LevelError, format, args...)
 }

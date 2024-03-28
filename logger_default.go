@@ -53,26 +53,6 @@ func DebugContextf(ctx context.Context, format string, args ...any) {
 	defaultLogger.DebugContextf(ctx, format, args...)
 }
 
-// Error calls Logger.Error on the default logger.
-func Error(msg string, args ...any) {
-	defaultLogger.Error(msg, args...)
-}
-
-// Errorf calls Logger.Errorf on the default logger.
-func Errorf(format string, args ...any) {
-	defaultLogger.Errorf(format, args...)
-}
-
-// ErrorContext calls Logger.ErrorContext on the default logger.
-func ErrorContext(ctx context.Context, msg string, args ...any) {
-	defaultLogger.ErrorContext(ctx, msg, args...)
-}
-
-// ErrorContextf calls Logger.ErrorContextf on the default logger.
-func ErrorContextf(ctx context.Context, format string, args ...any) {
-	defaultLogger.ErrorContextf(ctx, format, args...)
-}
-
 // Info calls Logger.Info on the default logger.
 func Info(msg string, args ...any) {
 	defaultLogger.Info(msg, args...)
@@ -111,4 +91,24 @@ func WarnContext(ctx context.Context, msg string, args ...any) {
 // WarnContextf calls Logger.WarnContextf on the default logger.
 func WarnContextf(ctx context.Context, format string, args ...any) {
 	defaultLogger.WarnContextf(ctx, format, args...)
+}
+
+// Error calls Logger.Error on the default logger.
+func Error(msg string, args ...any) {
+	defaultLogger.Error(msg, args...)
+}
+
+// Errorf calls Logger.Errorf on the default logger.
+func Errorf(format string, args ...any) {
+	defaultLogger.Errorf(format, args...)
+}
+
+// ErrorContext calls Logger.ErrorContext on the default logger.
+func ErrorContext(ctx context.Context, msg string, args ...any) {
+	defaultLogger.ErrorContext(ctx, msg, args...)
+}
+
+// ErrorContextf calls Logger.ErrorContextf on the default logger.
+func ErrorContextf(ctx context.Context, format string, args ...any) {
+	defaultLogger.ErrorContextf(ctx, format, args...)
 }
