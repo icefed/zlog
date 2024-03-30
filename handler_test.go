@@ -124,7 +124,7 @@ func isStacktraceLine(line string) bool {
 
 func TestHandlerEmptyConfig(t *testing.T) {
 	h := NewJSONHandler(nil)
-	log := slog.New(h)
+	log := slog.New(h.WithAttrs([]slog.Attr{}).WithGroup(""))
 	if log.Enabled(context.Background(), slog.LevelDebug) {
 		t.Error("default config enable debug level")
 	}
@@ -190,7 +190,7 @@ func TestHandlerContextAttrs(t *testing.T) {
 			},
 			Writer: &buf,
 		})
-		h = h.WithOptions(WithContextExtractor(userContextExtractor))
+		h = h.WithOptions(WithContextExtractor(userContextExtractor), WithContextExtractor(nil))
 
 		results := func() []map[string]any {
 			var ms []map[string]any

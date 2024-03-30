@@ -354,7 +354,7 @@ func (enc *jsonEncoder) addAny(v any) {
 			return
 		}
 		if !json.Valid(data) {
-			enc.safeAddString(fmt.Sprintf("!ERROR: invalid MarshalJSON output:%v", v))
+			enc.safeAddString(fmt.Sprintf("!ERROR:invalid MarshalJSON output:%s", data))
 			return
 		}
 		enc.addRawMessage(data)

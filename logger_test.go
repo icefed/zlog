@@ -5,8 +5,11 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"runtime"
 	"testing"
 	"time"
+
+	"github.com/icefed/zlog/buffer"
 )
 
 func TestLogger(t *testing.T) {
@@ -23,6 +26,7 @@ func TestLogger(t *testing.T) {
 		},
 		Writer: buf,
 	}))
+	l = New(l.Handler())
 
 	check := func(expected string) {
 		t.Helper()
@@ -36,14 +40,14 @@ func TestLogger(t *testing.T) {
 	}
 
 	// WithCallerSkip
-	testWithCallerSkip(l, check, 1, "zlog/logger_test.go:39")
+	testWithCallerSkip(l, check, 1, getCallerLineSource(0))
 
 	SetDefault(l)
 
 	l.WithOptions(WithAddSource(true)).Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
-	check(`{"level":"DEBUG","source":"zlog/logger_test.go:43","msg":"debug","key":"value"}`)
+	check(`{"level":"DEBUG","source":"` + getCallerLineSource(-1) + `","msg":"debug","key":"value"}`)
 	l.WithOptions(WithAddSource(true)).LogAttrs(context.Background(), slog.LevelDebug, "debug", slog.String("key", "value"))
-	check(`{"level":"DEBUG","source":"zlog/logger_test.go:45","msg":"debug","key":"value"}`)
+	check(`{"level":"DEBUG","source":"` + getCallerLineSource(-1) + `","msg":"debug","key":"value"}`)
 
 	WithGroup("g").With("app", "test").Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	check(`{"level":"DEBUG","msg":"debug","g":{"app":"test","key":"value"}}`)
@@ -97,4 +101,15 @@ func testWithCallerSkip(log *Logger, check func(expected string), skip int, expe
 	log.WithOptions(WithAddSource(true)).WithCallerSkip(1).
 		Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	check(`{"level":"DEBUG","source":"` + expectedSource + `","msg":"debug","key":"value"}`)
+}
+
+func getCallerLineSource(adjustLines int) string {
+	var pcs [1]uintptr
+	runtime.Callers(2, pcs[:])
+	pc := pcs[0]
+	source := buildSource(pc)
+	source.Line = source.Line + adjustLines
+	buf := buffer.New()
+	formatSourceValue(buf, source)
+	return buf.String()
 }

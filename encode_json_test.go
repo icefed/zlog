@@ -1,6 +1,7 @@
 package zlog
 
 import (
+	"fmt"
 	"io/fs"
 	"log/slog"
 	"math/big"
@@ -12,7 +13,16 @@ import (
 	"github.com/icefed/zlog/buffer"
 )
 
-func TestJSONEncoderNoReplace(t *testing.T) {
+type fakeJSONMarshaler struct {
+	json []byte
+	err  error
+}
+
+func (f fakeJSONMarshaler) MarshalJSON() ([]byte, error) {
+	return f.json, f.err
+}
+
+func TestJSONEncoder(t *testing.T) {
 	h := NewJSONHandler(&Config{
 		HandlerOptions: slog.HandlerOptions{
 			AddSource: true,
@@ -21,14 +31,14 @@ func TestJSONEncoderNoReplace(t *testing.T) {
 	})
 	buf := buffer.New()
 	defer buf.Free()
-	enc := newJSONEncoder(h, buf)
 
 	tests := []struct {
-		name   string
-		groups []string
-		key    string
-		value  any
-		want   string
+		name        string
+		groups      []string
+		key         string
+		value       any
+		want        string
+		replaceAttr func(_ []string, a slog.Attr) slog.Attr
 	}{
 		{
 			name:  "time",
@@ -92,58 +102,27 @@ func TestJSONEncoderNoReplace(t *testing.T) {
 			key:   "escapedstring",
 			value: "😀z\nz\rz\tz\"z\\z\u2028z\x00z\xff",
 			want:  `"escapedstring":"😀z\nz\rz\tz\"z\\z\u2028z\u0000z\ufffd"`,
-		},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			for _, group := range test.groups {
-				enc.OpenGroup(group)
-			}
-			switch v := test.value.(type) {
-			case time.Time:
-				enc.AppendTime(test.key, v)
-			case slog.Level:
-				enc.AppendLevel(test.key, v)
-			case string:
-				enc.AppendMessage(test.key, v)
-			case *stacktrace:
-				enc.AppendStacktrace(test.key, v)
-			case []byte:
-				enc.AppendFormatted(v)
-			default:
-				enc.AppendAttr(slog.Attr{
-					Key:   test.key,
-					Value: slog.AnyValue(v),
-				})
-			}
-			if string(buf.Bytes()) != test.want {
-				t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
-			}
-			enc.CloseGroups()
-			buf.Reset()
-		})
-	}
-}
-
-func TestJSONEncoderReplace(t *testing.T) {
-	h := NewJSONHandler(&Config{
-		HandlerOptions: slog.HandlerOptions{
-			AddSource: true,
-			Level:     slog.LevelDebug,
-		},
-	})
-	buf := buffer.New()
-	defer buf.Free()
-
-	tests := []struct {
-		name        string
-		groups      []string
-		key         string
-		value       any
-		want        string
-		replaceAttr func(_ []string, a slog.Attr) slog.Attr
-	}{
-		{
+		}, {
+			name:  "MarshalJSON error",
+			key:   "marshaljsonerror",
+			value: &fakeJSONMarshaler{err: fmt.Errorf("MarshalJSON error")},
+			want:  `"marshaljsonerror":"!ERROR:MarshalJSON error"`,
+		}, {
+			name:  "MarshalJSON get invalid",
+			key:   "marshaljsongetinvalid",
+			value: &fakeJSONMarshaler{json: []byte(`"invali"d"`)},
+			want:  `"marshaljsongetinvalid":"!ERROR:invalid MarshalJSON output:\"invali\"d\""`,
+		}, {
+			name:  "MarshalText error",
+			key:   "marshaltexterror",
+			value: &fakeTextMarshaler{err: fmt.Errorf("MarshalText error")},
+			want:  `"marshaltexterror":"!ERROR:MarshalText error"`,
+		}, {
+			name:  "json encode error",
+			key:   "jsonencodeerror",
+			value: make(chan int),
+			want:  `"jsonencodeerror":"!ERROR:json: unsupported type: chan int"`,
+		}, {
 			name:  "ignore level",
 			key:   slog.LevelKey,
 			value: slog.LevelDebug,
@@ -233,6 +212,16 @@ func TestJSONEncoderReplace(t *testing.T) {
 			key:   "group",
 			value: slog.GroupValue(slog.Attr{Key: "env", Value: slog.StringValue("prod")}, slog.Attr{Key: "app", Value: slog.StringValue("web")}),
 			want:  `"group":{"env":"prod","app":"web"}`,
+		}, {
+			name:  "ignore ip",
+			key:   "ipaddr",
+			value: &net.IPAddr{IP: net.IPv4(127, 0, 0, 1)},
+			replaceAttr: func(_ []string, a slog.Attr) slog.Attr {
+				if a.Key == "ipaddr" {
+					a.Key = ""
+				}
+				return a
+			},
 		}, {
 			name:   "replace in group",
 			groups: []string{"s1", "s2"},

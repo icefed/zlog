@@ -23,6 +23,11 @@ func TestNopHandler(t *testing.T) {
 func TestNopLogger(t *testing.T) {
 	log := NewNopLogger().WithOptions(WithAddSource(true))
 
+	h := log.Handler()
+	if h != nil {
+		t.Error("Handler should be nil")
+	}
+	log.WithCallerSkip(1).Info("info", "key", "value")
 	log.With("key", "value").Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	log.WithGroup("group").Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	log.Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
