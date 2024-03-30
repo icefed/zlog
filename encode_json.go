@@ -42,6 +42,10 @@ func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
 			return
 		}
 	}
+	enc.appendAttr(a)
+}
+
+func (enc *jsonEncoder) appendAttr(a slog.Attr) {
 	a.Value = a.Value.Resolve()
 	// If an Attr's key and value are both the zero value, ignore the Attr.
 	if a.Equal(slog.Attr{}) {
@@ -52,7 +56,7 @@ func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
 		// If a group's key is empty, inline the group's Attrs.
 		if a.Key == "" {
 			for i := range groupAttrs {
-				enc.AppendAttr(groupAttrs[i])
+				enc.appendAttr(groupAttrs[i])
 			}
 			return
 		}
@@ -61,7 +65,7 @@ func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
 		if len(groupAttrs) != 0 || !enc.ignoreEmptyGroup {
 			enc.OpenGroup(a.Key)
 			for i := range groupAttrs {
-				enc.AppendAttr(groupAttrs[i])
+				enc.appendAttr(groupAttrs[i])
 			}
 			enc.CloseGroup()
 		}
@@ -72,19 +76,24 @@ func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
 	enc.addValue(a.Value)
 }
 
+func (enc *jsonEncoder) replaceBuildInAttr(a slog.Attr) slog.Attr {
+	newAttr := enc.replaceAttr(nil, a)
+	// If ReplaceAttr returns an Attr with Key == "", the attribute is discarded.
+	if newAttr.Key == "" {
+		return slog.Attr{}
+	}
+	return newAttr
+}
+
 func (enc *jsonEncoder) AppendTime(key string, t time.Time) {
 	if enc.replaceAttr != nil {
-		attr := enc.replaceAttr(enc.openGroups, slog.Time(key, t))
-		// If ReplaceAttr returns an Attr with Key == "", the attribute is discarded.
-		if attr.Key == "" {
-			return
-		}
-		enc.addKey(key)
-		attr.Value = attr.Value.Resolve()
-		if attr.Value.Kind() == slog.KindTime {
-			enc.addBuildInTime(t)
+		attr := slog.Time(key, t)
+		newAttr := enc.replaceBuildInAttr(attr)
+		if attr.Equal(newAttr) {
+			enc.addKey(newAttr.Key)
+			enc.addBuildInTime(newAttr.Value.Any().(time.Time))
 		} else {
-			enc.addValue(attr.Value)
+			enc.appendAttr(newAttr)
 		}
 		return
 	}
@@ -94,7 +103,7 @@ func (enc *jsonEncoder) AppendTime(key string, t time.Time) {
 
 func (enc *jsonEncoder) AppendLevel(key string, l slog.Level) {
 	if enc.replaceAttr != nil {
-		enc.AppendAttr(slog.Any(key, l))
+		enc.appendAttr(enc.replaceBuildInAttr(slog.Any(key, l)))
 		return
 	}
 	enc.addKey(key)
@@ -103,7 +112,7 @@ func (enc *jsonEncoder) AppendLevel(key string, l slog.Level) {
 
 func (enc *jsonEncoder) AppendMessage(key string, s string) {
 	if enc.replaceAttr != nil {
-		enc.AppendAttr(slog.String(key, s))
+		enc.appendAttr(enc.replaceBuildInAttr(slog.String(key, s)))
 		return
 	}
 	enc.addKey(key)
@@ -112,7 +121,7 @@ func (enc *jsonEncoder) AppendMessage(key string, s string) {
 
 func (enc *jsonEncoder) AppendSourceFromPC(key string, pc uintptr) {
 	if enc.replaceAttr != nil {
-		enc.AppendAttr(slog.Any(key, buildSource(pc)))
+		enc.appendAttr(enc.replaceBuildInAttr(slog.Any(key, buildSource(pc))))
 		return
 	}
 	enc.addKey(key)
