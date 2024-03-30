@@ -249,20 +249,24 @@ func testContextAttrs(t *testing.T, h *JSONHandler, f func() []map[string]any) {
 	})
 
 	tests := []struct {
+		name         string
 		groups       []string
 		ctx          context.Context
 		wantKeyPaths []string
 		wantKeyValue any
 	}{
 		{
+			name:         "no context value",
 			ctx:          context.Background(),
 			wantKeyPaths: []string{"test"},
 			wantKeyValue: true,
 		}, {
+			name:         "with context value",
 			ctx:          ctx,
 			wantKeyPaths: []string{"user", "id"},
 			wantKeyValue: "5c81f444-93f9-4cf8-a3b5-c3aeb377a99d",
 		}, {
+			name:         "group with context value",
 			groups:       []string{"g"},
 			ctx:          ctx,
 			wantKeyPaths: []string{"g", "user", "name"},
@@ -281,18 +285,20 @@ func testContextAttrs(t *testing.T, h *JSONHandler, f func() []map[string]any) {
 	if len(tests) != len(results) {
 		t.Errorf("got %v, want %v", len(results), len(tests))
 	}
-	for i, result := range results {
-		var v any = result
-		for j := 0; j < len(tests[i].wantKeyPaths); j++ {
-			p := tests[i].wantKeyPaths[j]
-			vm, ok := v.(map[string]any)
-			if !ok {
-				t.Errorf("got %v, want map[string]any", v)
+	for i, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			var v any = results[i]
+			for j := 0; j < len(tests[i].wantKeyPaths); j++ {
+				p := tests[i].wantKeyPaths[j]
+				vm, ok := v.(map[string]any)
+				if !ok {
+					t.Errorf("got %v, want map[string]any", v)
+				}
+				v = vm[p]
 			}
-			v = vm[p]
-		}
-		if !reflect.DeepEqual(v, tests[i].wantKeyValue) {
-			t.Errorf("got %v, want %v", v, tests[i].wantKeyValue)
-		}
+			if !reflect.DeepEqual(v, tests[i].wantKeyValue) {
+				t.Errorf("got %v, want %v", v, tests[i].wantKeyValue)
+			}
+		})
 	}
 }

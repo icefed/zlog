@@ -26,49 +26,59 @@ func TestTextEncoder(t *testing.T) {
 		enc := newTextEncoder(h, buf)
 
 		tests := []struct {
+			name  string
 			key   string
 			value any
 			want  string
 		}{
 			{
+				name:  "time",
 				key:   slog.TimeKey,
 				value: testTime,
 				want:  "2023-08-16T01:02:03.666Z",
 			}, {
+				name:  "level",
 				key:   slog.LevelKey,
 				value: slog.LevelInfo,
 				want:  "INFO",
 			}, {
+				name:  "msg",
 				key:   slog.MessageKey,
 				value: "test msg",
 				want:  "test msg",
 			}, {
+				name:  "error",
 				key:   "error",
 				value: fs.ErrNotExist,
 				want:  "file does not exist",
 			}, {
-				key: slog.SourceKey,
+				name: "source",
+				key:  slog.SourceKey,
 				value: &slog.Source{
 					File: "test.go",
 					Line: 300,
 				},
 				want: "test.go:300",
 			}, {
+				name:  "stacktrace",
 				key:   "stacktrace",
 				value: &stacktrace{getPC()},
 				want:  wantPCFunction + "\n\t" + wantPCFile + ":" + strconv.Itoa(wantPCLine),
 			}, {
+				name:  "ip",
 				key:   "ip",
 				value: net.ParseIP("127.0.0.1"),
 				want:  "127.0.0.1",
 			},
 		}
 		for _, test := range tests {
-			enc.Append(test.key, test.value)
-			if string(buf.Bytes()) != test.want {
-				t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
-			}
-			buf.Reset()
+			t.Run(test.name, func(t *testing.T) {
+				enc.Append(test.key, test.value)
+				if string(buf.Bytes()) != test.want {
+					t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
+				}
+				buf.Reset()
+			})
 		}
 	})
 	t.Run("replace", func(t *testing.T) {
@@ -82,12 +92,14 @@ func TestTextEncoder(t *testing.T) {
 		defer buf.Free()
 
 		tests := []struct {
+			name        string
 			key         string
 			value       any
 			want        string
 			replaceAttr func(_ []string, a slog.Attr) slog.Attr
 		}{
 			{
+				name:  "ignore level",
 				key:   slog.LevelKey,
 				value: slog.LevelDebug,
 				want:  "",
@@ -98,6 +110,7 @@ func TestTextEncoder(t *testing.T) {
 					return a
 				},
 			}, {
+				name:  "replace level to int",
 				key:   slog.LevelKey,
 				value: slog.LevelError,
 				want:  "20",
@@ -109,6 +122,7 @@ func TestTextEncoder(t *testing.T) {
 					return a
 				},
 			}, {
+				name:  "replace pc to string",
 				key:   "replacepc",
 				value: getPC(),
 				want:  `replacedpc`,
@@ -121,15 +135,17 @@ func TestTextEncoder(t *testing.T) {
 			},
 		}
 		for _, test := range tests {
-			if test.replaceAttr != nil {
-				h = h.WithOptions(WithReplaceAttr(test.replaceAttr))
-			}
-			enc := newTextEncoder(h, buf)
-			enc.Append(test.key, test.value)
-			if string(buf.Bytes()) != test.want {
-				t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
-			}
-			buf.Reset()
+			t.Run(test.name, func(t *testing.T) {
+				if test.replaceAttr != nil {
+					h = h.WithOptions(WithReplaceAttr(test.replaceAttr))
+				}
+				enc := newTextEncoder(h, buf)
+				enc.Append(test.key, test.value)
+				if string(buf.Bytes()) != test.want {
+					t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
+				}
+				buf.Reset()
+			})
 		}
 	})
 }
