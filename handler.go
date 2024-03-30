@@ -63,6 +63,9 @@ type Config struct {
 
 	// ContextExtractors will be used in Handler.Handle
 	ContextExtractors []ContextExtractor
+
+	// If a group has no Attrs (even if it has a non-empty key), ignore it.
+	IgnoreEmptyGroup bool
 }
 
 func (c *Config) copy() *Config {
@@ -275,7 +278,7 @@ func (h *JSONHandler) encode(ctx context.Context, r slog.Record, buf *buffer.Buf
 		enc.AppendSourceFromPC(h.c.SourceKey, r.PC)
 	}
 	// message
-	enc.AppendString(h.c.MessageKey, r.Message)
+	enc.AppendMessage(h.c.MessageKey, r.Message)
 
 	// preformatted attrs
 	enc.AppendFormatted(h.preformattedGroupAttrs)

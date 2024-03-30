@@ -17,17 +17,19 @@ import (
 type jsonEncoder struct {
 	buf *buffer.Buffer
 
-	timeFormatter func([]byte, time.Time) []byte
-	replaceAttr   func(groups []string, a slog.Attr) slog.Attr
-	openGroups    []string
+	ignoreEmptyGroup bool
+	timeFormatter    func([]byte, time.Time) []byte
+	replaceAttr      func(groups []string, a slog.Attr) slog.Attr
+	openGroups       []string
 }
 
 func newJSONEncoder(h *JSONHandler, buf *buffer.Buffer) *jsonEncoder {
 	return &jsonEncoder{
-		buf:           buf,
-		timeFormatter: h.c.TimeFormatter,
-		openGroups:    h.groups,
-		replaceAttr:   h.c.ReplaceAttr,
+		buf:              buf,
+		ignoreEmptyGroup: h.c.IgnoreEmptyGroup,
+		timeFormatter:    h.c.TimeFormatter,
+		openGroups:       h.groups,
+		replaceAttr:      h.c.ReplaceAttr,
 	}
 }
 
@@ -48,15 +50,19 @@ func (enc *jsonEncoder) AppendAttr(a slog.Attr) {
 	if a.Value.Kind() == slog.KindGroup {
 		groupAttrs := a.Value.Group()
 		// If a group's key is empty, inline the group's Attrs.
+		if a.Key == "" {
+			for i := range groupAttrs {
+				enc.AppendAttr(groupAttrs[i])
+			}
+			return
+		}
 		// If a group has no Attrs (even if it has a non-empty key), ignore it.
-		notEmptyGroupOrKey := len(groupAttrs) != 0 && a.Key != ""
-		if notEmptyGroupOrKey {
+		// except if IgnoreEmptyGroup is false.
+		if len(groupAttrs) != 0 || !enc.ignoreEmptyGroup {
 			enc.OpenGroup(a.Key)
-		}
-		for i := range groupAttrs {
-			enc.AppendAttr(groupAttrs[i])
-		}
-		if notEmptyGroupOrKey {
+			for i := range groupAttrs {
+				enc.AppendAttr(groupAttrs[i])
+			}
 			enc.CloseGroup()
 		}
 		return
@@ -95,7 +101,7 @@ func (enc *jsonEncoder) AppendLevel(key string, l slog.Level) {
 	enc.addString(l.String())
 }
 
-func (enc *jsonEncoder) AppendString(key string, s string) {
+func (enc *jsonEncoder) AppendMessage(key string, s string) {
 	if enc.replaceAttr != nil {
 		enc.AppendAttr(slog.String(key, s))
 		return
@@ -140,7 +146,16 @@ func (enc *jsonEncoder) CloseGroup() {
 	if len(enc.openGroups) == 0 {
 		return
 	}
-	enc.buf.WriteByte('}')
+	// if the last group is empty and ignoreEmptyGroup is true, ignore it
+	if enc.buf.Bytes()[enc.buf.Len()-1] == '{' && enc.ignoreEmptyGroup {
+		// remove `"group":{`
+		enc.buf.Truncate(enc.buf.Len() - len(enc.openGroups[len(enc.openGroups)-1]) - 4)
+		if enc.buf.Bytes()[enc.buf.Len()-1] == ',' {
+			enc.buf.Truncate(enc.buf.Len() - 1)
+		}
+	} else {
+		enc.buf.WriteByte('}')
+	}
 	enc.openGroups = enc.openGroups[:len(enc.openGroups)-1]
 }
 

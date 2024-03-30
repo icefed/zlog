@@ -93,7 +93,7 @@ func TestJSONEncoderNoReplace(t *testing.T) {
 		case slog.Level:
 			enc.AppendLevel(test.key, v)
 		case string:
-			enc.AppendString(test.key, v)
+			enc.AppendMessage(test.key, v)
 		case *stacktrace:
 			enc.AppendStacktrace(test.key, v)
 		case []byte:
@@ -236,7 +236,7 @@ func TestJSONEncoderReplace(t *testing.T) {
 		case slog.Level:
 			enc.AppendLevel(test.key, v)
 		case string:
-			enc.AppendString(test.key, v)
+			enc.AppendMessage(test.key, v)
 		case uintptr:
 			enc.AppendSourceFromPC(test.key, v)
 		case *stacktrace:

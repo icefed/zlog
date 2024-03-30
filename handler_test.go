@@ -9,73 +9,11 @@ import (
 	"regexp"
 	"strings"
 	"testing"
+	"testing/slogtest"
 	"time"
 
 	cpty "github.com/creack/pty"
-	expslog "golang.org/x/exp/slog"
-	"golang.org/x/exp/slog/slogtest"
 )
-
-var _ expslog.Handler = &warpExpSlogHandler{}
-
-type warpExpSlogHandler struct {
-	slog.Handler
-}
-
-func copyAttr(attr expslog.Attr) slog.Attr {
-	newAttr := slog.Attr{
-		Key: attr.Key,
-	}
-	switch attr.Value.Kind() {
-	case expslog.KindGroup:
-		newAttr.Value = slog.GroupValue(copyAttrs(attr.Value.Group())...)
-	case expslog.KindLogValuer:
-		newAttr.Value = slog.AnyValue(attr.Value.LogValuer().LogValue().Any())
-	default:
-		newAttr.Value = slog.AnyValue(attr.Value.Any())
-	}
-	return newAttr
-}
-
-func copyAttrs(attrs []expslog.Attr) []slog.Attr {
-	var newAttrs []slog.Attr
-	for _, attr := range attrs {
-		newAttrs = append(newAttrs, copyAttr(attr))
-	}
-	return newAttrs
-}
-
-func copyRecord(record expslog.Record) slog.Record {
-	r := slog.Record{
-		Time:    record.Time,
-		Message: record.Message,
-		Level:   slog.Level(record.Level),
-		PC:      record.PC,
-	}
-	record.Attrs(func(attr expslog.Attr) bool {
-		r.AddAttrs(copyAttr(attr))
-		return true
-	})
-	return r
-}
-
-func (h *warpExpSlogHandler) Enabled(ctx context.Context, level expslog.Level) bool {
-	return h.Handler.Enabled(ctx, slog.Level(level))
-}
-
-func (h *warpExpSlogHandler) Handle(ctx context.Context, record expslog.Record) error {
-	return h.Handler.Handle(ctx, copyRecord(record))
-}
-
-func (h *warpExpSlogHandler) WithAttrs(attrs []expslog.Attr) expslog.Handler {
-	newHandler := h.Handler.WithAttrs(copyAttrs(attrs))
-	return &warpExpSlogHandler{newHandler}
-}
-
-func (h *warpExpSlogHandler) WithGroup(name string) expslog.Handler {
-	newHandler := h.Handler.WithGroup(name)
-	return &warpExpSlogHandler{newHandler}
-}
 
 func TestHandlerSlogtestJson(t *testing.T) {
 	var buf bytes.Buffer
@@ -83,7 +21,8 @@ func TestHandlerSlogtestJson(t *testing.T) {
 		HandlerOptions: slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		},
-		Writer: &buf,
+		IgnoreEmptyGroup: true,
+		Writer:           &buf,
 	})
 	h = h.WithOptions(WithAddSource(true), WithStacktraceEnabled(true), WithStacktraceLevel(slog.LevelDebug), WithStacktraceKey("stacktrace"))
 
@@ -101,7 +40,7 @@ func TestHandlerSlogtestJson(t *testing.T) {
 		}
 		return ms
 	}
-	err := slogtest.TestHandler(&warpExpSlogHandler{h}, results)
+	err := slogtest.TestHandler(h, results)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -113,6 +52,7 @@ func TestHandlerSlogtestDevelopment(t *testing.T) {
 		HandlerOptions: slog.HandlerOptions{
 			AddSource: true,
 		},
+		IgnoreEmptyGroup:  true,
 		StacktraceEnabled: true,
 		StacktraceLevel:   slog.LevelDebug,
 	})
@@ -163,7 +103,7 @@ func TestHandlerSlogtestDevelopment(t *testing.T) {
 		}
 		return ms
 	}
-	err := slogtest.TestHandler(&warpExpSlogHandler{h}, results)
+	err := slogtest.TestHandler(h, results)
 	if err != nil {
 		t.Fatal(err)
 	}
