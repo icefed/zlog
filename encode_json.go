@@ -76,14 +76,14 @@ func (enc *jsonEncoder) AppendTime(key string, t time.Time) {
 		enc.addKey(key)
 		attr.Value = attr.Value.Resolve()
 		if attr.Value.Kind() == slog.KindTime {
-			enc.addTime2Formatter(t)
+			enc.addBuildInTime(t)
 		} else {
 			enc.addValue(attr.Value)
 		}
 		return
 	}
 	enc.addKey(key)
-	enc.addTime2Formatter(t)
+	enc.addBuildInTime(t)
 }
 
 func (enc *jsonEncoder) AppendLevel(key string, l slog.Level) {
@@ -685,7 +685,7 @@ func (enc *jsonEncoder) addTime(t time.Time) {
 	enc.buf.WriteByte('"')
 }
 
-func (enc *jsonEncoder) addTime2Formatter(t time.Time) {
+func (enc *jsonEncoder) addBuildInTime(t time.Time) {
 	enc.buf.WriteByte('"')
 	*enc.buf = enc.timeFormatter(*enc.buf, t)
 	enc.buf.WriteByte('"')
