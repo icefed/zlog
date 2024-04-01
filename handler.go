@@ -70,7 +70,7 @@ type Config struct {
 
 func (c *Config) copy() *Config {
 	newConfig := *c
-	newConfig.ContextExtractors = slices.Clip(c.ContextExtractors)
+	newConfig.ContextExtractors = slices.Clone(c.ContextExtractors)
 	return &newConfig
 }
 
@@ -132,6 +132,7 @@ func NewJSONHandler(config *Config) *JSONHandler {
 		if c.SourceKey == "" {
 			c.SourceKey = defaultConfig.SourceKey
 		}
+		c.ContextExtractors = slices.Clone(c.ContextExtractors)
 	}
 
 	handler := &JSONHandler{
