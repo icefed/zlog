@@ -83,18 +83,16 @@ func TestHandlerSlogtestDevelopment(t *testing.T) {
 			}
 			fields := strings.Fields(string(line[:prefixLen]))
 			t, err := time.Parse(RFC3339Milli, fields[0])
-			if err != nil {
-				fields = append([]string{""}, fields...)
-			} else {
+			if err == nil {
 				m[slog.TimeKey] = t
 			}
-			for i, field := range fields {
-				switch i {
-				case 1:
+			for _, field := range fields[1:] {
+				switch {
+				case isLevelField(field):
 					m[slog.LevelKey] = field
-				case 2:
+				case isSourceField(field):
 					m[slog.SourceKey] = field
-				case 3:
+				default:
 					m[slog.MessageKey] = field
 				}
 			}
@@ -107,6 +105,23 @@ func TestHandlerSlogtestDevelopment(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+}
+
+func isLevelField(s string) bool {
+	switch s {
+	case slog.LevelDebug.String(), slog.LevelInfo.String(), slog.LevelWarn.String(), slog.LevelError.String():
+		return true
+	}
+	return false
+}
+
+var sourceRegex = regexp.MustCompile(`^(.+\/)?.+.go:\d+$`)
+
+func isSourceField(s string) bool {
+	if sourceRegex.MatchString(s) {
+		return true
+	}
+	return false
 }
 
 var functionRegex = regexp.MustCompile(`^([?:\w-.]+\/)*[\w.]+$`)
