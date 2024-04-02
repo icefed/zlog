@@ -89,7 +89,7 @@ func ExampleContextExtractorUserContext() {
 		defer server.Close()
 		// wait server start
 		for {
-			time.Sleep(time.Second)
+			time.Sleep(time.Millisecond * 100)
 			conn, err := net.Dial("tcp", ":38080")
 			if err == nil {
 				conn.Close()

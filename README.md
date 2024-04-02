@@ -16,11 +16,12 @@
 
 ## Usage
 
-More examples can be found in [examples](https://github.com/icefed/zlog/tree/main/examples).
+More examples can be found in [examples](https://github.com/icefed/zlog/tree/master/examples).
 
 Because zlog implements the slog.Handler interface, you can create a zlog.JSONHander and use slog.Logger.
 ```go
 import (
+    "context"
     "log/slog"
 
     "github.com/icefed/zlog"
