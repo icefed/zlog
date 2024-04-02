@@ -16,6 +16,8 @@
 
 ## Usage
 
+More examples can be found in [examples](https://github.com/icefed/zlog/tree/main/examples).
+
 Because zlog implements the slog.Handler interface, you can create a zlog.JSONHander and use slog.Logger.
 ```go
 import (
@@ -150,92 +152,79 @@ Outputs:
 
 We often need to extract the value from the context and print it to the log, for example, an apiserver receives a user request and prints trace and user information to the log.
 
-The following is an example of printing a user request in http server. The log contains user information and can be used as an audit log.
+This example shows how to use the context, and print OpenTelemetry trace in log. If you have an api server that supports OpenTelemetry, you can use this example in your handler middleware and print trace in each log.
 
 ```go
-func AuthMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// ...
-		// Pretend that we read and parsed the token, and the user authentication succeeded
-		ctx := context.WithValue(context.Background(), userKey{}, user{
-			Name: "test@test.com",
-			Id:   "a2067a0a-6b0b-4ee5-a049-16bdb8ed6ff5",
-		})
-		next.ServeHTTP(w, r.WithContext(ctx))
-	})
-}
+package main
 
-func LogMiddleware(log *zlog.Logger, next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		start := time.Now()
+import (
+	"context"
+	"log/slog"
 
-		next.ServeHTTP(w, r)
+	"go.opentelemetry.io/otel"
+	sdktrace "go.opentelemetry.io/otel/sdk/trace"
+	"go.opentelemetry.io/otel/sdk/trace/tracetest"
+	"go.opentelemetry.io/otel/trace"
 
-		duration := time.Since(start)
-		log.InfoContext(r.Context(), "Received request",
-			slog.String("method", r.Method),
-			slog.String("path", r.URL.Path),
-			slog.String("duration", duration.String()),
-		)
-	})
-}
+	"github.com/icefed/zlog"
+)
 
-func hello(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(http.StatusOK)
-	w.Write([]byte("Hello, World!"))
-}
-
-func userContextExtractor(ctx context.Context) []slog.Attr {
-	user, ok := ctx.Value(userKey{}).(user)
-	if ok {
+// traceContextExtractor implement the ContextExtractor, extracts trace context from context
+func traceContextExtractor(ctx context.Context) []slog.Attr {
+	spanContext := trace.SpanContextFromContext(ctx)
+	if spanContext.IsValid() {
 		return []slog.Attr{
-			slog.Group("user", slog.String("name", user.Name), slog.String("id", user.Id)),
+			slog.Group("trace",
+				slog.String("traceID", spanContext.TraceID().String()),
+				slog.String("spanID", spanContext.SpanID().String()),
+			),
 		}
 	}
 	return nil
 }
 
+func parentFun(ctx context.Context, tracer trace.Tracer) {
+	ctx, parentSpan := tracer.Start(ctx, "caller1")
+	defer parentSpan.End()
+
+	// print log
+	slog.InfoContext(ctx, "call parentFun")
+
+	childFun(ctx, tracer)
+}
+
+func childFun(ctx context.Context, tracer trace.Tracer) {
+	ctx, childSpan := tracer.Start(ctx, "caller2")
+	defer childSpan.End()
+
+	// print log
+	slog.InfoContext(ctx, "call childFun")
+}
+
 func main() {
-	h := zlog.NewJSONHandler(&zlog.Config{
-		HandlerOptions: slog.HandlerOptions{
-			Level: slog.LevelDebug,
-		},
-	})
-	h = h.WithOptions(zlog.WithContextExtractor(userContextExtractor))
-	log := zlog.New(h)
+	// create a logger with traceContextExtractor
+	h := zlog.NewJSONHandler(nil)
+	h = h.WithOptions(zlog.WithContextExtractor(traceContextExtractor))
+	log := slog.New(h)
+	slog.SetDefault(log)
 
-	httpHandler := http.HandlerFunc(hello)
-	// set auth middleware
-	handler := AuthMiddleware(httpHandler)
-	// set log middleware
-	handler = LogMiddleware(log, handler)
-
-	log.Info("starting server, listening on port 8080")
-	http.ListenAndServe(":8080", handler)
+	// prepare a call with trace context
+	exporter := tracetest.NewInMemoryExporter()
+	tracerProvider := sdktrace.NewTracerProvider(
+		sdktrace.WithBatcher(exporter),
+	)
+	otel.SetTracerProvider(tracerProvider)
+	tracer := otel.Tracer("api")
+	ctx := context.Background()
+	parentFun(ctx, tracer)
 }
-
-type userKey struct{}
-type user struct {
-	Name string
-	Id   string
-}
-```
-
-Send a request using curl.
-```bash
-curl http://localhost:8080/api/v1/products
-Hello, World!
 ```
 
 Outputs:
 ```
-{"time":"2023-09-09T19:51:55.683+08:00","level":"INFO","msg":"starting server, listening on port 8080"}
-{"time":"2023-09-09T19:52:04.228+08:00","level":"INFO","msg":"Received request","user":{"name":"test@test.com","id":"a2067a0a-6b0b-4ee5-a049-16bdb8ed6ff5"},"method":"GET","path":"/api/v1/products","duration":"6.221µs"}
+{"time":"2023-09-08T20:12:14.733","level":"INFO","msg":"call parentFun","trace":{"traceID":"95f0717d9da16177176efdbc7c06bfbd","spanID":"7718edf7b2a8388d"}}
+{"time":"2023-09-08T20:12:14.733","level":"INFO","msg":"call childFun","trace":{"traceID":"95f0717d9da16177176efdbc7c06bfbd","spanID":"ef83f673951742b0"}}
 ```
-
-The example of OpenTelemetry TraceContextExtractor.
-[TraceContext](https://pkg.go.dev/github.com/icefed/zlog#example-ContextExtractor-TraceContext)
-
 
 ## Benchmarks
 

@@ -1,4 +1,4 @@
-package zlog_test
+package examples
 
 import (
 	"context"
@@ -47,7 +47,7 @@ func childFun(ctx context.Context, tracer trace.Tracer) {
 // This example shows how to use the context, and print OpenTelemetry trace in log.
 // If you have an api server that supports OpenTelemetry, you can use this example in your
 // handler middleware and print trace in each log.
-func ExampleContextExtractor_traceContext() {
+func ExampleContextExtractorTraceContext() {
 	// create a logger with traceContextExtractor
 	h := zlog.NewJSONHandler(nil)
 	h = h.WithOptions(zlog.WithContextExtractor(traceContextExtractor))
