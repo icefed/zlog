@@ -385,7 +385,12 @@ func (enc *jsonEncoder) addAny(v any) {
 }
 
 func isNil(v any) bool {
-	return v == nil || (reflect.ValueOf(v).Kind() == reflect.Ptr && reflect.ValueOf(v).IsNil())
+	if v == nil {
+		return true
+	}
+
+	vo := reflect.ValueOf(v)
+	return vo.Kind() == reflect.Ptr && vo.IsNil()
 }
 
 func (enc *jsonEncoder) addErrorArray(errors []error) {
