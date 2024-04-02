@@ -14,7 +14,6 @@ type Logger struct {
 	h *JSONHandler
 
 	callerSkip int
-	capturePC  bool
 }
 
 // New creates a new Logger. NewJSONHandler(nil) will be used if h is nil.
@@ -23,8 +22,7 @@ func New(h *JSONHandler) *Logger {
 		h = NewJSONHandler(nil)
 	}
 	l := &Logger{
-		h:         h,
-		capturePC: h.GetAddSource(),
+		h: h,
 	}
 
 	return l
@@ -32,8 +30,7 @@ func New(h *JSONHandler) *Logger {
 
 func (l *Logger) clone() *Logger {
 	return &Logger{
-		h:         l.h,
-		capturePC: l.capturePC,
+		h: l.h,
 	}
 }
 
@@ -62,7 +59,6 @@ func (l *Logger) WithOptions(opts ...Option) *Logger {
 	}
 	newLogger := l.clone()
 	newLogger.h = l.h.WithOptions(opts...)
-	newLogger.capturePC = newLogger.h.GetAddSource()
 	return newLogger
 }
 
@@ -128,7 +124,7 @@ func (l *Logger) log(ctx context.Context, level slog.Level, msg string, args ...
 		return
 	}
 	var pc uintptr
-	if l.capturePC {
+	if l.h.CapturePC(level) {
 		var pcs [1]uintptr
 		// skip runtime.Callers, log, log's caller, and l.callerSkip
 		runtime.Callers(3+l.callerSkip, pcs[:])
@@ -150,7 +146,7 @@ func (l *Logger) logAttrs(ctx context.Context, level slog.Level, msg string, att
 		return
 	}
 	var pc uintptr
-	if l.capturePC {
+	if l.h.CapturePC(level) {
 		var pcs [1]uintptr
 		// skip runtime.Callers, logAttrs, logAttrs's caller, and l.callerSkip
 		runtime.Callers(3+l.callerSkip, pcs[:])

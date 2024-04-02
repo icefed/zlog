@@ -151,9 +151,10 @@ func (h *JSONHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= h.c.Level.Level()
 }
 
-// GetAddSource reports whether the handler should add the source of a slog.Record.
-func (h *JSONHandler) GetAddSource() bool {
-	return h.c.AddSource
+// CapturePC reports whether the handler will use the PC when logging at the given level.
+// For example, the handler has AddSource option enabled, and the stacktrace is enabled.
+func (h *JSONHandler) CapturePC(level slog.Level) bool {
+	return h.c.AddSource || h.stacktraceEnabled(level)
 }
 
 // WithOptions return a new handler with the given options.
