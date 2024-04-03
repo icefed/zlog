@@ -162,8 +162,9 @@ func (h *JSONHandler) CapturePC(level slog.Level) bool {
 func (h *JSONHandler) WithOptions(opts ...Option) *JSONHandler {
 	newHandler := h.clone()
 	for i := range opts {
-		opts[i].apply(newHandler)
+		opts[i].apply(newHandler.c)
 	}
+	newHandler.isTerm = isTerminal(newHandler.c.Writer)
 	return newHandler
 }
 

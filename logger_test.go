@@ -98,7 +98,7 @@ func TestLogger(t *testing.T) {
 }
 
 func testWithCallerSkip(log *Logger, check func(expected string), skip int, expectedSource string) {
-	log.WithOptions(WithAddSource(true)).WithCallerSkip(1).
+	log.WithCallerSkip(1).WithOptions(WithAddSource(true)).
 		Log(context.Background(), slog.LevelDebug, "debug", "key", "value")
 	check(`{"level":"DEBUG","source":"` + expectedSource + `","msg":"debug","key":"value"}`)
 }
