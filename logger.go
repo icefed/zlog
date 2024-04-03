@@ -30,7 +30,8 @@ func New(h *JSONHandler) *Logger {
 
 func (l *Logger) clone() *Logger {
 	return &Logger{
-		h: l.h,
+		h:          l.h,
+		callerSkip: l.callerSkip,
 	}
 }
 
