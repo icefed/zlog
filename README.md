@@ -229,69 +229,48 @@ Outputs:
 
 ## Benchmarks
 
-Test modified from [zap benchmarking suite](https://github.com/uber-go/zap/tree/master/benchmarks).  Only the zap, zerolog, slog, zlog loggers are retained.
-
-Because zap and zerolog support MarshalObject interface to improve object encode performance, but slog does not support it, so non-MarshalObject objects are also tested here.
+Test modified from [zap benchmarking suite](https://github.com/uber-go/zap/tree/master/benchmarks).
 
 ```bench
 goos: darwin
 goarch: arm64
-pkg: go.uber.org/zap/benchmarks
-BenchmarkDisabledWithoutFields/Zap-10     	1000000000	         0.5976 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledWithoutFields/Zap.Sugar-10         	346361454	         9.847 ns/op	      16 B/op	       1 allocs/op
-BenchmarkDisabledWithoutFields/Zap.SugarFormatting-10         	42086342	        56.21 ns/op	     136 B/op	       6 allocs/op
-BenchmarkDisabledWithoutFields/rs/zerolog-10                  	1000000000	         0.3232 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledWithoutFields/slog-10                        	1000000000	         0.6154 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledWithoutFields/slog.zaphandler-10             	1000000000	         0.7660 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledWithoutFields/slog.zloghandler-10            	1000000000	         0.5928 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledWithoutFields/zlog-10                        	1000000000	         0.5674 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledWithoutFields/zlog.Formatting-10             	37454059	        63.80 ns/op	     136 B/op	       6 allocs/op
-BenchmarkDisabledAccumulatedContext/Zap-10                    	1000000000	         0.5905 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledAccumulatedContext/Zap.Sugar-10              	324995505	         9.024 ns/op	      16 B/op	       1 allocs/op
-BenchmarkDisabledAccumulatedContext/Zap.SugarFormatting-10    	39587138	        65.36 ns/op	     136 B/op	       6 allocs/op
-BenchmarkDisabledAccumulatedContext/rs/zerolog-10             	1000000000	         0.3103 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledAccumulatedContext/slog-10                   	1000000000	         0.5856 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledAccumulatedContext/slog.zaphandler-10        	1000000000	         0.7274 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledAccumulatedContext/slog.zloghandler-10       	1000000000	         0.5851 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledAccumulatedContext/zlog-10                   	1000000000	         0.5400 ns/op	       0 B/op	       0 allocs/op
-BenchmarkDisabledAccumulatedContext/zlog.Formatting-10        	34952918	        64.34 ns/op	     136 B/op	       6 allocs/op
-BenchmarkDisabledAddingFields/Zap-10                          	 9234999	       257.3 ns/op	     736 B/op	       5 allocs/op
-BenchmarkDisabledAddingFields/Zap.Sugar-10                    	35595940	        64.27 ns/op	     136 B/op	       6 allocs/op
-BenchmarkDisabledAddingFields/rs/zerolog-10                   	200183110	        11.96 ns/op	      24 B/op	       1 allocs/op
-BenchmarkDisabledAddingFields/slog-10                         	11475495	       206.7 ns/op	     536 B/op	       6 allocs/op
-BenchmarkDisabledAddingFields/slog.zaphandler-10              	11647605	       206.9 ns/op	     536 B/op	       6 allocs/op
-BenchmarkDisabledAddingFields/slog.zloghandler-10             	11737071	       205.6 ns/op	     536 B/op	       6 allocs/op
-BenchmarkDisabledAddingFields/zlog-10                         	11583421	       207.2 ns/op	     536 B/op	       6 allocs/op
-BenchmarkWithoutFields/Zap-10                                 	56544705	        48.74 ns/op	       0 B/op	       0 allocs/op
-BenchmarkWithoutFields/Zap.Sugar-10                           	35700538	        67.88 ns/op	      16 B/op	       1 allocs/op
-BenchmarkWithoutFields/Zap.SugarFormatting-10                 	 1505811	      1595 ns/op	    1922 B/op	      58 allocs/op
-BenchmarkWithoutFields/rs/zerolog-10                          	100000000	        30.94 ns/op	       0 B/op	       0 allocs/op
-BenchmarkWithoutFields/rs/zerolog.Formatting-10               	 1556541	      1554 ns/op	    1915 B/op	      58 allocs/op
-BenchmarkWithoutFields/slog-10                                	 9841291	       245.1 ns/op	       0 B/op	       0 allocs/op
-BenchmarkWithoutFields/slog.zaphandler-10                     	30395377	        90.22 ns/op	       0 B/op	       0 allocs/op
-BenchmarkWithoutFields/slog.zloghandler-10                    	29850390	        80.98 ns/op	       0 B/op	       0 allocs/op
-BenchmarkWithoutFields/zlog-10                                	44637580	        56.80 ns/op	       0 B/op	       0 allocs/op
-BenchmarkWithoutFields/zlog.Formatting-10                     	 1686939	      1435 ns/op	    1276 B/op	      57 allocs/op
-BenchmarkAccumulatedContext/Zap-10                            	43512088	        51.23 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/Zap.Sugar-10                      	33498090	        70.62 ns/op	      16 B/op	       1 allocs/op
-BenchmarkAccumulatedContext/Zap.SugarFormatting-10            	 1475952	      1610 ns/op	    1926 B/op	      58 allocs/op
-BenchmarkAccumulatedContext/rs/zerolog-10                     	85710969	        32.07 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/rs/zerolog.Formatting-10          	 1535347	      1567 ns/op	    1916 B/op	      58 allocs/op
-BenchmarkAccumulatedContext/slog-10                           	 9633142	       255.5 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/slog.zaphandler-10                	27362756	        84.53 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/slog.zloghandler-10               	27954474	        86.78 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/zlog-10                           	46082322	        50.92 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAccumulatedContext/zlog.Formatting-10                	 1613914	      1467 ns/op	    1277 B/op	      57 allocs/op
-BenchmarkAddingFields/Zap-10                                  	 3834751	       626.1 ns/op	     740 B/op	       5 allocs/op
-BenchmarkAddingFields/Zap.WithoutObjectMarshal-10             	 1954508	      1224 ns/op	    1420 B/op	      18 allocs/op
-BenchmarkAddingFields/Zap.Sugar-10                            	 2485612	       950.4 ns/op	    1498 B/op	      10 allocs/op
-BenchmarkAddingFields/Zap.Sugar.WithoutObjectMarshal-10       	 1544667	      1578 ns/op	    2182 B/op	      23 allocs/op
-BenchmarkAddingFields/rs/zerolog-10                           	 8181747	       284.0 ns/op	      24 B/op	       1 allocs/op
-BenchmarkAddingFields/rs/zerolog.WithoutObjectMarshal-10      	 2102283	      1135 ns/op	    1661 B/op	      16 allocs/op
-BenchmarkAddingFields/slog-10                                 	  988268	      2381 ns/op	    3371 B/op	      40 allocs/op
-BenchmarkAddingFields/slog.zaphandler-10                      	 1851842	      1294 ns/op	    1380 B/op	      24 allocs/op
-BenchmarkAddingFields/slog.zloghandler-10                     	 2059356	      1173 ns/op	    1160 B/op	      22 allocs/op
-BenchmarkAddingFields/zlog-10                                 	 2094583	      1140 ns/op	    1160 B/op	      22 allocs/op
+pkg: github.com/icefed/zlog/benchmarks
+BenchmarkDisabledWithoutFields/slog-10          1000000000               0.6019 ns/op          0 B/op          0 allocs/op
+BenchmarkDisabledWithoutFields/slog_with_zlog-10                1000000000               0.5913 ns/op          0 B/op          0 allocs/op
+BenchmarkDisabledWithoutFields/zlog-10                          1000000000               0.5496 ns/op          0 B/op          0 allocs/op
+BenchmarkDisabledWithoutFields/slog_with_zap-10                 1000000000               0.8184 ns/op          0 B/op          0 allocs/op
+BenchmarkDisabledWithoutFields/zap-10                           1000000000               0.6048 ns/op          0 B/op          0 allocs/op
+BenchmarkDisabledWithoutFields/zerolog-10                       1000000000               0.3016 ns/op          0 B/op          0 allocs/op
+BenchmarkDisabledAddingFields/slog-10                           57371786               208.7 ns/op           576 B/op          6 allocs/op
+BenchmarkDisabledAddingFields/slog_with_zlog-10                 56256844               208.3 ns/op           576 B/op          6 allocs/op
+BenchmarkDisabledAddingFields/zlog-10                           58574133               205.8 ns/op           576 B/op          6 allocs/op
+BenchmarkDisabledAddingFields/slog_with_zap-10                  58468917               206.9 ns/op           576 B/op          6 allocs/op
+BenchmarkDisabledAddingFields/zap-10                            41587197               295.7 ns/op           864 B/op          6 allocs/op
+BenchmarkDisabledAddingFields/zerolog-10                        303398799               39.08 ns/op           88 B/op          2 allocs/op
+BenchmarkWithoutFields/slog-10                                  47158194               231.9 ns/op             0 B/op          0 allocs/op
+BenchmarkWithoutFields/slog_with_zlog-10                        143867673               81.77 ns/op            0 B/op          0 allocs/op
+BenchmarkWithoutFields/zlog-10                                  182174908               64.98 ns/op            0 B/op          0 allocs/op
+BenchmarkWithoutFields/slog_with_zap-10                         125818678               95.04 ns/op            0 B/op          0 allocs/op
+BenchmarkWithoutFields/zap-10                                   169056685               72.34 ns/op            0 B/op          0 allocs/op
+BenchmarkWithoutFields/zerolog-10                               348895234               35.03 ns/op            0 B/op          0 allocs/op
+BenchmarkAccumulatedContext/slog-10                             51551946               241.8 ns/op             0 B/op          0 allocs/op
+BenchmarkAccumulatedContext/slog_with_zlog-10                   138282912               90.81 ns/op            0 B/op          0 allocs/op
+BenchmarkAccumulatedContext/zlog-10                             184607311               66.28 ns/op            0 B/op          0 allocs/op
+BenchmarkAccumulatedContext/slog_with_zap-10                    132471319               89.32 ns/op            0 B/op          0 allocs/op
+BenchmarkAccumulatedContext/zap-10                              167639162               76.73 ns/op            0 B/op          0 allocs/op
+BenchmarkAccumulatedContext/zerolog-10                          314418170               36.53 ns/op            0 B/op          0 allocs/op
+BenchmarkAddingFields/slog-10                                    4498432              2639 ns/op            3951 B/op         38 allocs/op
+BenchmarkAddingFields/slog_with_zlog-10                          9287110              1300 ns/op            1344 B/op         20 allocs/op
+BenchmarkAddingFields/zlog-10                                    9383146              1290 ns/op            1344 B/op         20 allocs/op
+BenchmarkAddingFields/slog_with_zap-10                           6758552              1776 ns/op            2218 B/op         23 allocs/op
+BenchmarkAddingFields/zap-10                                     8615821              1389 ns/op            1508 B/op         18 allocs/op
+BenchmarkAddingFields/zerolog-10                                 9067814              1309 ns/op            2031 B/op         15 allocs/op
+BenchmarkKVArgs/slog-10                                          4663335              2562 ns/op            3586 B/op         40 allocs/op
+BenchmarkKVArgs/slog_with_zlog-10                                9989289              1186 ns/op             978 B/op         22 allocs/op
+BenchmarkKVArgs/zlog-10                                         10343742              1171 ns/op             978 B/op         22 allocs/op
+BenchmarkKVArgs/slog_with_zap-10                                 7146567              1661 ns/op            1851 B/op         25 allocs/op
+BenchmarkKVArgs/zap-10                                           6913246              1730 ns/op            2352 B/op         24 allocs/op
+BenchmarkKVArgs/zerolog-10                                       4937739              2431 ns/op            3355 B/op         40 allocs/op
 PASS
-ok  	go.uber.org/zap/benchmarks	140.293s
+ok      github.com/icefed/zlog/benchmarks       471.856s
 ```

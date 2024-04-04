@@ -16,7 +16,11 @@ func BenchmarkContextAttrs(b *testing.B) {
 		Name: "test@test.com",
 		Id:   "5c81f444-93f9-4cf8-a3b5-c3aeb377a99d",
 	})
-	for i := 0; i < b.N; i++ {
-		log.InfoContext(ctx, "test")
-	}
+
+	b.ReportAllocs()
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			log.InfoContext(ctx, "test")
+		}
+	})
 }
