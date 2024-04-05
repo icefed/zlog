@@ -151,8 +151,9 @@ func (h *JSONHandler) Enabled(_ context.Context, level slog.Level) bool {
 	return level >= h.c.Level.Level()
 }
 
-// CapturePC reports whether the handler will use the PC when logging at the given level.
-// For example, the handler has AddSource option enabled, and the stacktrace is enabled.
+// CapturePC returns true if the handler has AddSource option enabled or the stacktrace
+// is enabled at the given level.
+// Logger should set PC in the slog.Record if this function returns true.
 func (h *JSONHandler) CapturePC(level slog.Level) bool {
 	return h.c.AddSource || h.stacktraceEnabled(level)
 }
