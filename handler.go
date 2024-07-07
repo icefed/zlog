@@ -46,6 +46,9 @@ type Config struct {
 	// TimeFormatter is the time formatter to use for buildin attribute time value. If nil, use format RFC3339Milli as default.
 	TimeFormatter AppendTimeFunc
 
+	// TimeDurationAsInt to format time.Duration as int, default format use time.Duration.String.
+	TimeDurationAsInt bool
+
 	// built-in attribute keys, use slog's default if not set.
 	// https://pkg.go.dev/log/slog#pkg-constants
 	TimeKey    string

@@ -52,6 +52,7 @@ func TestHandlerSlogtestDevelopment(t *testing.T) {
 		HandlerOptions: slog.HandlerOptions{
 			AddSource: true,
 		},
+		TimeDurationAsInt: true,
 		IgnoreEmptyGroup:  true,
 		StacktraceEnabled: true,
 		StacktraceLevel:   slog.LevelDebug,

@@ -17,19 +17,22 @@ import (
 type jsonEncoder struct {
 	buf *buffer.Buffer
 
-	ignoreEmptyGroup bool
-	timeFormatter    func([]byte, time.Time) []byte
-	replaceAttr      func(groups []string, a slog.Attr) slog.Attr
-	openGroups       []string
+	timeFormatter     func([]byte, time.Time) []byte
+	timeDurationAsInt bool
+	ignoreEmptyGroup  bool
+	replaceAttr       func(groups []string, a slog.Attr) slog.Attr
+	openGroups        []string
 }
 
 func newJSONEncoder(h *JSONHandler, buf *buffer.Buffer) *jsonEncoder {
 	return &jsonEncoder{
-		buf:              buf,
-		ignoreEmptyGroup: h.c.IgnoreEmptyGroup,
-		timeFormatter:    h.c.TimeFormatter,
-		openGroups:       h.groups,
-		replaceAttr:      h.c.ReplaceAttr,
+		buf: buf,
+
+		timeFormatter:     h.c.TimeFormatter,
+		timeDurationAsInt: h.c.TimeDurationAsInt,
+		ignoreEmptyGroup:  h.c.IgnoreEmptyGroup,
+		openGroups:        h.groups,
+		replaceAttr:       h.c.ReplaceAttr,
 	}
 }
 
@@ -705,7 +708,11 @@ func (enc *jsonEncoder) addFloat64(f float64) {
 }
 
 func (enc *jsonEncoder) addDuration(d time.Duration) {
-	*enc.buf = strconv.AppendInt(*enc.buf, int64(d), 10)
+	if enc.timeDurationAsInt {
+		*enc.buf = strconv.AppendInt(*enc.buf, int64(d), 10)
+		return
+	}
+	enc.addString(d.String())
 }
 
 func (enc *jsonEncoder) addTime(t time.Time) {

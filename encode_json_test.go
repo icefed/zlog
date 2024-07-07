@@ -28,6 +28,8 @@ func TestJSONEncoder(t *testing.T) {
 			AddSource: true,
 			Level:     slog.LevelDebug,
 		},
+		TimeDurationAsInt: true,
+		IgnoreEmptyGroup:  true,
 	})
 	buf := buffer.New()
 	defer buf.Free()
@@ -278,6 +280,8 @@ func TestJSONEncoderAddAny(t *testing.T) {
 		HandlerOptions: slog.HandlerOptions{
 			Level: slog.LevelDebug,
 		},
+		TimeDurationAsInt: true,
+		IgnoreEmptyGroup:  true,
 	})
 	buf := buffer.New()
 	defer buf.Free()
@@ -652,6 +656,55 @@ func TestJSONEncoderAddAny(t *testing.T) {
 			enc.addAny(test.value)
 			if string(buf.Bytes()) != test.want {
 				t.Errorf("test %T, got %v, want %v", test.value, string(buf.Bytes()), test.want)
+			}
+			buf.Reset()
+		})
+	}
+}
+
+func TestJSONEncoderTimeDurationAsInt(t *testing.T) {
+	h := NewJSONHandler(&Config{
+		HandlerOptions: slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+		IgnoreEmptyGroup: true,
+	})
+	buf := buffer.New()
+	defer buf.Free()
+
+	tests := []struct {
+		name  string
+		key   string
+		value any
+		want  string
+	}{
+		{
+			name:  "durseconds",
+			key:   "durseconds",
+			value: time.Second * 30,
+			want:  `"durseconds":"30s"`,
+		}, {
+			name:  "durminutes",
+			key:   "durminutes",
+			value: time.Minute * 30,
+			want:  `"durminutes":"30m0s"`,
+		}, {
+			name:  "durm_s",
+			key:   "durm_s",
+			value: time.Minute*30 + time.Second*10,
+			want:  `"durm_s":"30m10s"`,
+		},
+	}
+
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			enc := newJSONEncoder(h, buf)
+			enc.AppendAttr(slog.Attr{
+				Key:   test.key,
+				Value: slog.AnyValue(test.value),
+			})
+			if string(buf.Bytes()) != test.want {
+				t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
 			}
 			buf.Reset()
 		})

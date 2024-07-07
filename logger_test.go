@@ -88,11 +88,11 @@ func TestLogger(t *testing.T) {
 	check(`{"level":"INFO","msg":"infof: progress: 95"}`)
 
 	Warn("request limit exceeded", "duration", 500*time.Millisecond)
-	check(`{"level":"WARN","msg":"request limit exceeded","duration":500000000}`)
+	check(`{"level":"WARN","msg":"request limit exceeded","duration":"500ms"}`)
 	Warnf("request limit exceeded: %s: %d", "duration", 500*time.Millisecond)
 	check(`{"level":"WARN","msg":"request limit exceeded: duration: 500000000"}`)
 	WarnContext(context.Background(), "request limit exceeded", "duration", 500*time.Millisecond)
-	check(`{"level":"WARN","msg":"request limit exceeded","duration":500000000}`)
+	check(`{"level":"WARN","msg":"request limit exceeded","duration":"500ms"}`)
 	WarnContextf(context.Background(), "request limit exceeded: %s: %d", "duration", 500*time.Millisecond)
 	check(`{"level":"WARN","msg":"request limit exceeded: duration: 500000000"}`)
 }
