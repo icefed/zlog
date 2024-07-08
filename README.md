@@ -1,6 +1,6 @@
 # zlog - JSON structured handler/logger for Golang slog
 
-![GitHub Tag](https://img.shields.io/github/v/tag/icefed/zlog)
+[![GitHub Tag](https://img.shields.io/github/v/tag/icefed/zlog)](https://github.com/icefed/zlog/tags)
 [![Go Reference](https://pkg.go.dev/badge/github.com/icefed/zlog.svg)](https://pkg.go.dev/github.com/icefed/zlog)
 [![Go Report Card](https://goreportcard.com/badge/github.com/icefed/zlog)](https://goreportcard.com/report/github.com/icefed/zlog)
 ![Build Status](https://github.com/icefed/zlog/actions/workflows/test.yml/badge.svg)
