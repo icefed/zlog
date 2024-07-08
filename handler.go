@@ -46,7 +46,7 @@ type Config struct {
 	// TimeFormatter is the time formatter to use for buildin attribute time value. If nil, use format RFC3339Milli as default.
 	TimeFormatter AppendTimeFunc
 
-	// TimeDurationAsInt to format time.Duration as int, default format use time.Duration.String.
+	// TimeDurationAsInt format time.Duration as int if true, otherwise format as string using time.Duration.String method, eg: 3m10s.
 	TimeDurationAsInt bool
 
 	// built-in attribute keys, use slog's default if not set.
