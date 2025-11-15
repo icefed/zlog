@@ -43,7 +43,6 @@ func (enc *textEncoder) Append(key string, v any) {
 		enc.addValue(a.Value)
 		return
 	}
-	// source PC
 	switch v := v.(type) {
 	// source PC
 	case uintptr:

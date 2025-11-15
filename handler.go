@@ -69,6 +69,10 @@ type Config struct {
 
 	// If a group has no Attrs (even if it has a non-empty key), ignore it.
 	IgnoreEmptyGroup bool
+
+	// If true, indent the json output with spaces after ':' and ','.
+	// easier to read for development mode.
+	SpaceIndent bool
 }
 
 func (c *Config) copy() *Config {

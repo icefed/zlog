@@ -52,7 +52,7 @@ func TestJSONEncoder(t *testing.T) {
 			groups: []string{"g"},
 			key:    slog.LevelKey,
 			value:  slog.LevelInfo,
-			want:   `"g":{"level":"INFO"`,
+			want:   `"g":{"level":"INFO"}`,
 		}, {
 			name:  "msg",
 			key:   slog.MessageKey,
@@ -63,7 +63,7 @@ func TestJSONEncoder(t *testing.T) {
 			groups: []string{"g", "g2"},
 			key:    "error",
 			value:  fs.ErrNotExist,
-			want:   `"g":{"g2":{"error":"file does not exist"`,
+			want:   `"g":{"g2":{"error":"file does not exist"}}`,
 		}, {
 			name: "source",
 			key:  slog.SourceKey,
@@ -229,7 +229,7 @@ func TestJSONEncoder(t *testing.T) {
 			groups: []string{"s1", "s2"},
 			key:    "string",
 			value:  "stringvalue",
-			want:   `"s1":{"s2":{"string":"replacedstring"`,
+			want:   `"s1":{"s2":{"string":"replacedstring"}}`,
 			replaceAttr: func(_ []string, a slog.Attr) slog.Attr {
 				if a.Key == "string" {
 					a.Value = slog.StringValue("replacedstring")
@@ -266,10 +266,11 @@ func TestJSONEncoder(t *testing.T) {
 					Value: slog.AnyValue(v),
 				})
 			}
+			enc.CloseGroups()
+
 			if string(buf.Bytes()) != test.want {
 				t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
 			}
-			enc.CloseGroups()
 			buf.Reset()
 		})
 	}
@@ -705,6 +706,92 @@ func TestJSONEncoderTimeDurationAsInt(t *testing.T) {
 			})
 			if string(buf.Bytes()) != test.want {
 				t.Errorf("got %v, want %v", string(buf.Bytes()), test.want)
+			}
+			buf.Reset()
+		})
+	}
+}
+
+func TestJSONEncoderSpaceIndent(t *testing.T) {
+	h := NewJSONHandler(&Config{
+		HandlerOptions: slog.HandlerOptions{
+			Level: slog.LevelDebug,
+		},
+		IgnoreEmptyGroup: true,
+		SpaceIndent:      true,
+	})
+	buf := buffer.New()
+	defer buf.Free()
+
+	tests := []struct {
+		name  string
+		attrs []any
+		want  string
+	}{
+		{
+			name: "bool",
+			attrs: []any{
+				slog.Attr{
+					Key:   "key",
+					Value: slog.BoolValue(true),
+				},
+			},
+			want: `"key": true`,
+		}, {
+			name: "int array",
+			attrs: []any{
+				slog.Attr{
+					Key:   "key",
+					Value: slog.AnyValue([]int{1, 2, 3, 4, 5}),
+				},
+				slog.Attr{
+					Key:   "dur",
+					Value: slog.DurationValue(time.Hour),
+				},
+			},
+			want: `"key": [1, 2, 3, 4, 5], "dur": "1h0m0s"`,
+		}, {
+			name: "groups attr",
+			attrs: []any{
+				slog.Attr{
+					Key:   "key",
+					Value: slog.AnyValue("value"),
+				},
+				slog.Attr{
+					Key:   "gempty",
+					Value: slog.GroupValue(),
+				},
+			},
+			want: `"key": "value"`,
+		}, {
+			name: "empty groups",
+			attrs: []any{
+				"g",
+				slog.Attr{
+					Key:   "key",
+					Value: slog.AnyValue("value"),
+				},
+				"g2",
+			},
+			want: `"g": {"key": "value"}`,
+		},
+	}
+
+	for _, tc := range tests {
+		t.Run(tc.name, func(t *testing.T) {
+			enc := newJSONEncoder(h, buf)
+			for _, attr := range tc.attrs {
+				switch v := attr.(type) {
+				case string:
+					enc.OpenGroup(v)
+				case slog.Attr:
+					enc.AppendAttr(v)
+				}
+			}
+			enc.CloseGroups()
+
+			if string(buf.Bytes()) != tc.want {
+				t.Errorf("got %v, want %v", string(buf.Bytes()), tc.want)
 			}
 			buf.Reset()
 		})

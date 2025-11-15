@@ -188,12 +188,12 @@ func (l *Logger) LogAttrs(ctx context.Context, level slog.Level, msg string, att
 
 // Debug prints log message at the debug level.
 func (l *Logger) Debug(msg string, args ...any) {
-	l.log(nil, slog.LevelDebug, msg, args...)
+	l.log(context.Background(), slog.LevelDebug, msg, args...)
 }
 
 // Debugf prints log message at the debug level, fmt.Sprintf is used to format.
 func (l *Logger) Debugf(format string, args ...any) {
-	l.logf(nil, slog.LevelDebug, format, args...)
+	l.logf(context.Background(), slog.LevelDebug, format, args...)
 }
 
 // DebugContext prints log message at the debug level with context.
@@ -233,7 +233,7 @@ func (l *Logger) Warn(msg string, args ...any) {
 
 // Warnf prints log message at the warn level, fmt.Sprintf is used to format.
 func (l *Logger) Warnf(format string, args ...any) {
-	l.logf(nil, slog.LevelWarn, format, args...)
+	l.logf(context.Background(), slog.LevelWarn, format, args...)
 }
 
 // WarnContext prints log message at the warn level with context.
@@ -253,7 +253,7 @@ func (l *Logger) Error(msg string, args ...any) {
 
 // Errorf prints log message at the error level, fmt.Sprintf is used to format.
 func (l *Logger) Errorf(format string, args ...any) {
-	l.logf(nil, slog.LevelError, format, args...)
+	l.logf(context.Background(), slog.LevelError, format, args...)
 }
 
 // ErrorContext prints log message at the error level with context.

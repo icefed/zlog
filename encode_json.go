@@ -20,6 +20,7 @@ type jsonEncoder struct {
 	timeFormatter     func([]byte, time.Time) []byte
 	timeDurationAsInt bool
 	ignoreEmptyGroup  bool
+	spaceIndent       bool
 	replaceAttr       func(groups []string, a slog.Attr) slog.Attr
 	openGroups        []string
 }
@@ -31,6 +32,7 @@ func newJSONEncoder(h *JSONHandler, buf *buffer.Buffer) *jsonEncoder {
 		timeFormatter:     h.c.TimeFormatter,
 		timeDurationAsInt: h.c.TimeDurationAsInt,
 		ignoreEmptyGroup:  h.c.IgnoreEmptyGroup,
+		spaceIndent:       h.c.SpaceIndent,
 		openGroups:        h.groups,
 		replaceAttr:       h.c.ReplaceAttr,
 	}
@@ -161,8 +163,16 @@ func (enc *jsonEncoder) CloseGroup() {
 	// if the last group is empty and ignoreEmptyGroup is true, ignore it
 	if enc.buf.Bytes()[enc.buf.Len()-1] == '{' && enc.ignoreEmptyGroup {
 		// remove `"group":{`
-		enc.buf.Truncate(enc.buf.Len() - len(enc.openGroups[len(enc.openGroups)-1]) - 4)
-		if enc.buf.Bytes()[enc.buf.Len()-1] == ',' {
+		length := len(enc.openGroups[len(enc.openGroups)-1]) + 4
+		if enc.spaceIndent {
+			length += 1
+		}
+		enc.buf.Truncate(enc.buf.Len() - length)
+		// remove spaceIndent space if have
+		if enc.buf.Len() > 0 && enc.buf.Bytes()[enc.buf.Len()-1] == ' ' {
+			enc.buf.Truncate(enc.buf.Len() - 1)
+		}
+		if enc.buf.Len() > 0 && enc.buf.Bytes()[enc.buf.Len()-1] == ',' {
 			enc.buf.Truncate(enc.buf.Len() - 1)
 		}
 	} else {
@@ -404,7 +414,7 @@ func (enc *jsonEncoder) addErrorArray(errors []error) {
 	enc.buf.WriteByte('[')
 	for i, err := range errors {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		if isNil(err) {
 			enc.addNil()
@@ -449,7 +459,7 @@ func (enc *jsonEncoder) addStringArray(arr []string) {
 	enc.buf.WriteByte('[')
 	for i, s := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.safeAddString(s)
 	}
@@ -464,7 +474,7 @@ func (enc *jsonEncoder) addBoolArray(arr []bool) {
 	enc.buf.WriteByte('[')
 	for i, b := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addBool(b)
 	}
@@ -479,7 +489,7 @@ func (enc *jsonEncoder) addIntArray(arr []int) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addInt64(int64(n))
 	}
@@ -494,7 +504,7 @@ func (enc *jsonEncoder) addInt8Array(arr []int8) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addInt64(int64(n))
 	}
@@ -509,7 +519,7 @@ func (enc *jsonEncoder) addInt16Array(arr []int16) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addInt64(int64(n))
 	}
@@ -524,7 +534,7 @@ func (enc *jsonEncoder) addInt32Array(arr []int32) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addInt64(int64(n))
 	}
@@ -539,7 +549,7 @@ func (enc *jsonEncoder) addInt64Array(arr []int64) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addInt64(n)
 	}
@@ -554,7 +564,7 @@ func (enc *jsonEncoder) addUintArray(arr []uint) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addUint64(uint64(n))
 	}
@@ -569,7 +579,7 @@ func (enc *jsonEncoder) addUint16Array(arr []uint16) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addUint64(uint64(n))
 	}
@@ -584,7 +594,7 @@ func (enc *jsonEncoder) addUint32Array(arr []uint32) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addUint64(uint64(n))
 	}
@@ -599,7 +609,7 @@ func (enc *jsonEncoder) addUint64Array(arr []uint64) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addUint64(n)
 	}
@@ -614,7 +624,7 @@ func (enc *jsonEncoder) addFloat32Array(arr []float32) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addFloat32(float64(n))
 	}
@@ -629,7 +639,7 @@ func (enc *jsonEncoder) addFloat64Array(arr []float64) {
 	enc.buf.WriteByte('[')
 	for i, n := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addFloat64(n)
 	}
@@ -644,7 +654,7 @@ func (enc *jsonEncoder) addDurationArray(arr []time.Duration) {
 	enc.buf.WriteByte('[')
 	for i, d := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addDuration(d)
 	}
@@ -659,7 +669,7 @@ func (enc *jsonEncoder) addTimeArray(arr []time.Time) {
 	enc.buf.WriteByte('[')
 	for i, t := range arr {
 		if i > 0 {
-			enc.buf.WriteByte(',')
+			enc.addSeparator()
 		}
 		enc.addTime(t)
 	}
@@ -749,6 +759,9 @@ func (enc *jsonEncoder) addKey(key string) {
 	enc.addSeparator()
 	enc.safeAddString(key)
 	enc.buf.WriteByte(':')
+	if enc.spaceIndent {
+		enc.buf.WriteByte(' ')
+	}
 }
 
 func (enc *jsonEncoder) addSeparator() {
@@ -761,6 +774,9 @@ func (enc *jsonEncoder) addSeparator() {
 		return
 	default:
 		enc.buf.WriteByte(',')
+		if enc.spaceIndent {
+			enc.buf.WriteByte(' ')
+		}
 	}
 }
 
