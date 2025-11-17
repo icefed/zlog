@@ -55,7 +55,7 @@ func TestFormatColorLevelValue(t *testing.T) {
 
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
-			formatColorLevelValue(buf, test.level)
+			formatColorLevelValue(buf, test.level, func(l slog.Level) string { return l.String() })
 			if !bytes.Equal(buf.Bytes(), test.want) {
 				t.Errorf("got %v, want %v", string(buf.Bytes()), string(test.want))
 			}

@@ -4,7 +4,6 @@ import (
 	"encoding"
 	"fmt"
 	"log/slog"
-	"time"
 
 	"github.com/icefed/zlog/buffer"
 )
@@ -14,7 +13,8 @@ type textEncoder struct {
 	buf *buffer.Buffer
 
 	coloredLevel  bool
-	timeFormatter func([]byte, time.Time) []byte
+	timeFormatter AppendTimeFunc
+	levelStringer LevelStringer
 	replaceAttr   func(groups []string, a slog.Attr) slog.Attr
 }
 
@@ -23,6 +23,7 @@ func newTextEncoder(h *JSONHandler, buf *buffer.Buffer) *textEncoder {
 		buf:           buf,
 		coloredLevel:  h.needColoredLevel(),
 		timeFormatter: h.c.TimeFormatter,
+		levelStringer: h.c.LevelStringer,
 		replaceAttr:   h.c.ReplaceAttr,
 	}
 }
@@ -62,9 +63,9 @@ func (enc *textEncoder) addValue(v slog.Value) {
 	case slog.KindAny:
 		if l, ok := v.Any().(slog.Level); ok {
 			if enc.coloredLevel {
-				formatColorLevelValue(enc.buf, l)
+				formatColorLevelValue(enc.buf, l, enc.levelStringer)
 			} else {
-				enc.buf.WriteString(l.String())
+				enc.buf.WriteString(enc.levelStringer(l))
 			}
 			return
 		}

@@ -14,6 +14,7 @@
 - WithCallerSkip to skip caller
 - Context extractor for Record context
 - Custom time formatter for buildin attribute time value
+- Custom logging level, ex: add a new level "trace"
 
 ## Usage
 
@@ -226,6 +227,70 @@ Outputs:
 ```
 {"time":"2023-09-08T20:12:14.733","level":"INFO","msg":"call parentFun","trace":{"traceID":"95f0717d9da16177176efdbc7c06bfbd","spanID":"7718edf7b2a8388d"}}
 {"time":"2023-09-08T20:12:14.733","level":"INFO","msg":"call childFun","trace":{"traceID":"95f0717d9da16177176efdbc7c06bfbd","spanID":"ef83f673951742b0"}}
+```
+
+### Custom logging level
+
+slog defines four logging levels, Debug, Info, Warn and Error, but it's not easy to add a new level.
+zlog provides a solution for this, you can use the LevelStringer to define your own logging level.
+
+The following example shows how to use the LevelStringer to define a new logging level called `LevelTrace`.
+
+```go
+func main() {
+	h := zlog.NewJSONHandler(&zlog.Config{
+		HandlerOptions: slog.HandlerOptions{
+			Level: LevelTrace,
+		},
+		LevelStringer: customLevelStringer,
+	})
+	log := slog.New(h)
+	log.Log(context.Background(), LevelTrace, "hello world")
+	log.Debug("hello world")
+	log.Info("hello world")
+	log.Warn("hello world")
+	log.Error("hello world")
+}
+
+// LevelTrace define a Trace level
+var LevelTrace = slog.LevelDebug - 4
+
+func customLevelStringer(l slog.Level) string {
+	str := func(base string, val slog.Level) string {
+		if val == 0 {
+			return base
+		}
+		b := strings.Builder{}
+		b.WriteString(base)
+		if val > 0 {
+			b.WriteString("+")
+		}
+		b.WriteString(strconv.Itoa(int(val)))
+		return b.String()
+	}
+
+	switch {
+	case l < slog.LevelDebug:
+		return str("TRACE", l-LevelTrace)
+	case l < slog.LevelInfo:
+		return str("DEBUG", l-slog.LevelDebug)
+	case l < slog.LevelWarn:
+		return str("INFO", l-slog.LevelInfo)
+	case l < slog.LevelError:
+		return str("WARN", l-slog.LevelWarn)
+	default:
+		return str("ERROR", l-slog.LevelError)
+	}
+}
+```
+
+Outputs:
+```
+{"time":"2025-11-17T20:13:56.293+08:00","level":"TRACE","msg":"hello world"}
+{"time":"2025-11-17T20:13:56.294+08:00","level":"DEBUG","msg":"hello world"}
+{"time":"2025-11-17T20:13:56.294+08:00","level":"INFO","msg":"hello world"}
+{"time":"2025-11-17T20:13:56.294+08:00","level":"WARN","msg":"hello world"}
+{"time":"2025-11-17T20:13:56.294+08:00","level":"ERROR","msg":"hello world"}
 ```
 
 ## Benchmarks

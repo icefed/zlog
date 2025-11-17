@@ -17,10 +17,11 @@ import (
 type jsonEncoder struct {
 	buf *buffer.Buffer
 
-	timeFormatter     func([]byte, time.Time) []byte
+	timeFormatter     AppendTimeFunc
 	timeDurationAsInt bool
 	ignoreEmptyGroup  bool
 	spaceIndent       bool
+	levelStringer     LevelStringer
 	replaceAttr       func(groups []string, a slog.Attr) slog.Attr
 	openGroups        []string
 }
@@ -33,6 +34,7 @@ func newJSONEncoder(h *JSONHandler, buf *buffer.Buffer) *jsonEncoder {
 		timeDurationAsInt: h.c.TimeDurationAsInt,
 		ignoreEmptyGroup:  h.c.IgnoreEmptyGroup,
 		spaceIndent:       h.c.SpaceIndent,
+		levelStringer:     h.c.LevelStringer,
 		openGroups:        h.groups,
 		replaceAttr:       h.c.ReplaceAttr,
 	}
@@ -112,7 +114,7 @@ func (enc *jsonEncoder) AppendLevel(key string, l slog.Level) {
 		return
 	}
 	enc.addKey(key)
-	enc.addString(l.String())
+	enc.addString(enc.levelStringer(l))
 }
 
 func (enc *jsonEncoder) AppendMessage(key string, s string) {

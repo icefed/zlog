@@ -32,7 +32,7 @@ func init() {
 }
 
 // formatColorLevelValue returns the string representation of the level.
-func formatColorLevelValue(buf *buffer.Buffer, l slog.Level) {
+func formatColorLevelValue(buf *buffer.Buffer, l slog.Level, levelStringer LevelStringer) {
 	var mode lvlEscape
 	for _, mode = range levelColorList {
 		if l >= mode.Level {
@@ -40,7 +40,7 @@ func formatColorLevelValue(buf *buffer.Buffer, l slog.Level) {
 		}
 	}
 	buf.WriteString(mode.string)
-	buf.WriteString(l.String())
+	buf.WriteString(levelStringer(l))
 	buf.WriteString(reset)
 }
 

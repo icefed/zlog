@@ -73,6 +73,10 @@ type Config struct {
 	// If true, indent the json output with spaces after ':' and ','.
 	// easier to read for development mode.
 	SpaceIndent bool
+
+	// LevelStringer returns the level as string, that levels can be customized.
+	// default is slog.Level.String.
+	LevelStringer LevelStringer
 }
 
 func (c *Config) copy() *Config {
@@ -80,6 +84,9 @@ func (c *Config) copy() *Config {
 	newConfig.ContextExtractors = slices.Clone(c.ContextExtractors)
 	return &newConfig
 }
+
+// LevelStringer returns the level as string.
+type LevelStringer func(slog.Level) string
 
 // AppendTimeFunc append the formatted value to buf and returns the extended buffer.
 type AppendTimeFunc func(buf []byte, t time.Time) []byte
@@ -105,6 +112,7 @@ var defaultConfig = Config{
 	StacktraceEnabled: false,
 	StacktraceLevel:   slog.LevelError,
 	StacktraceKey:     "stacktrace",
+	LevelStringer:     func(l slog.Level) string { return l.String() },
 }
 
 // NewJSONHandler creates a slog handler that writes log messages as JSON.
@@ -138,6 +146,9 @@ func NewJSONHandler(config *Config) *JSONHandler {
 		}
 		if c.SourceKey == "" {
 			c.SourceKey = defaultConfig.SourceKey
+		}
+		if c.LevelStringer == nil {
+			c.LevelStringer = defaultConfig.LevelStringer
 		}
 		c.ContextExtractors = slices.Clone(c.ContextExtractors)
 	}
